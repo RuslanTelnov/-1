@@ -1,0 +1,24 @@
+<svg width="600" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="grad_creative1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00205B;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#CE0058;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F55A00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- "N" made of pixels/blocks - digital, tech, "new era" -->
+  <rect x="150" y="180" width="40" height="40" fill="url(#grad_creative1)"/>
+  <rect x="150" y="240" width="40" height="40" fill="url(#grad_creative1)"/>
+  <rect x="150" y="300" width="40" height="40" fill="url(#grad_creative1)"/>
+  <rect x="150" y="360" width="40" height="40" fill="url(#grad_creative1)"/>
+  
+  <rect x="210" y="220" width="40" height="40" fill="url(#grad_creative1)"/>
+  <rect x="270" y="260" width="40" height="40" fill="url(#grad_creative1)"/>
+  <rect x="330" y="300" width="40" height="40" fill="url(#grad_creative1)"/>
+  
+  <rect x="390" y="180" width="40" height="40" fill="url(#grad_creative1)"/>
+  <rect x="390" y="240" width="40" height="40" fill="url(#grad_creative1)"/>
+  <rect x="390" y="300" width="40" height="40" fill="url(#grad_creative1)"/>
+  <rect x="390" y="360" width="40" height="40" fill="url(#grad_creative1)"/>
+</svg>

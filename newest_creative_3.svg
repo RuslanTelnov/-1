@@ -1,0 +1,25 @@
+<svg width="600" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="grad_creative3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00205B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F55A00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- "N" made of circles/dots - constellation, connection -->
+  <circle cx="180" cy="200" r="25" fill="url(#grad_creative3)"/>
+  <circle cx="180" cy="280" r="25" fill="url(#grad_creative3)"/>
+  <circle cx="180" cy="360" r="25" fill="url(#grad_creative3)"/>
+  
+  <circle cx="260" cy="240" r="20" fill="url(#grad_creative3)"/>
+  <circle cx="340" cy="320" r="20" fill="url(#grad_creative3)"/>
+  
+  <circle cx="420" cy="200" r="25" fill="url(#grad_creative3)"/>
+  <circle cx="420" cy="280" r="25" fill="url(#grad_creative3)"/>
+  <circle cx="420" cy="360" r="25" fill="url(#grad_creative3)"/>
+  
+  <!-- Connection lines -->
+  <line x1="180" y1="200" x2="180" y2="360" stroke="url(#grad_creative3)" stroke-width="8" opacity="0.3"/>
+  <line x1="180" y1="200" x2="420" y2="360" stroke="url(#grad_creative3)" stroke-width="8" opacity="0.3"/>
+  <line x1="420" y1="200" x2="420" y2="360" stroke="url(#grad_creative3)" stroke-width="8" opacity="0.3"/>
+</svg>

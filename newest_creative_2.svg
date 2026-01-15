@@ -1,0 +1,16 @@
+<svg width="600" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="grad_creative2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7D9BC1;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#631D76;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F55A00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- "N" as impossible object / optical illusion -->
+  <path d="M 150 200 L 150 400 L 200 400 L 200 280 L 250 320 L 250 400 L 300 400 L 300 200 L 250 200 L 250 280 L 200 240 L 200 200 Z
+           M 300 200 L 350 240 L 350 200 Z
+           M 350 280 L 400 320 L 400 280 Z
+           M 350 360 L 400 400 L 450 400 L 450 200 L 400 200 L 400 280 L 350 240 Z" 
+        fill="url(#grad_creative2)"/>
+</svg>

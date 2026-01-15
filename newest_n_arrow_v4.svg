@@ -1,0 +1,25 @@
+<svg width="600" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="grad_v4" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" style="stop-color:#00205B;stop-opacity:1" />
+      <stop offset="35%" style="stop-color:#7D9BC1;stop-opacity:1" />
+      <stop offset="65%" style="stop-color:#CE0058;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F55A00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Abstract N where the diagonal IS the arrow - Version 4 -->
+  <g fill="url(#grad_v4)" stroke="none">
+    <!-- Left vertical of N -->
+    <rect x="140" y="180" width="50" height="280" rx="8"/>
+    
+    <!-- Diagonal arrow shaft -->
+    <polygon points="190,350 340,180 390,210 240,380"/>
+    
+    <!-- Arrow head -->
+    <polygon points="340,180 390,210 420,160 450,190 480,140 400,120 370,150"/>
+    
+    <!-- Right vertical of N -->
+    <rect x="360" y="180" width="50" height="280" rx="8"/>
+  </g>
+</svg>

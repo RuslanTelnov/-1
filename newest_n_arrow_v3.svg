@@ -1,0 +1,16 @@
+<svg width="600" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="grad_v3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7D9BC1;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#631D76;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#CE0058;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F55A00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Minimalist rounded N with arrow emerging from top - Version 3 -->
+  <path d="M 150 400 Q 150 420 170 420 L 170 260 L 330 420 Q 350 420 350 400 L 350 200 Q 350 180 330 180 L 330 340 L 170 180 Q 150 180 150 200 Z
+           M 380 240 L 380 160 L 460 160 L 460 240 L 520 240 L 420 140 L 320 240 Z" 
+        fill="url(#grad_v3)" 
+        stroke="none"/>
+</svg>

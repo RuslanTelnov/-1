@@ -1,0 +1,146 @@
+:root {
+    /* Inherit from velveto-brand.css */
+}
+
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+html,
+body {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
+body {
+    color: var(--velveto-text-primary);
+    background-color: var(--velveto-bg-primary);
+    /* Subtle ambient background mesh */
+    background-image:
+        radial-gradient(circle at 15% 50%, rgba(255, 179, 90, 0.03), transparent 35%),
+        radial-gradient(circle at 85% 30%, rgba(244, 233, 219, 0.02), transparent 35%);
+    font-family: var(--velveto-font-ui);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--velveto-font-display);
+    letter-spacing: var(--velveto-tracking-display);
+    text-transform: uppercase;
+    font-weight: 300;
+}
+
+/* Modern Table Styles - Velveto Edition */
+.ms-table-container {
+    background: rgba(16, 21, 40, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--velveto-radius-card);
+    overflow: hidden;
+    box-shadow: var(--velveto-shadow-deep);
+    margin-top: 2rem;
+}
+
+.ms-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    color: var(--velveto-text-secondary);
+    font-size: 0.9rem;
+}
+
+.ms-table th {
+    text-align: left;
+    padding: 1.5rem 1.5rem;
+    background: rgba(5, 8, 20, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-weight: 400;
+    color: var(--velveto-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.7rem;
+    font-family: var(--velveto-font-ui);
+}
+
+.ms-table td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    vertical-align: middle;
+    transition: all 0.2s ease;
+}
+
+.ms-table tr:last-child td {
+    border-bottom: none;
+}
+
+.ms-table tr {
+    transition: all 0.2s ease;
+}
+
+.ms-table tr:hover {
+    background-color: rgba(255, 179, 90, 0.03);
+}
+
+.ms-table tr:hover td {
+    color: var(--velveto-text-primary);
+}
+
+/* Thumbnails */
+.ms-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: var(--velveto-bg-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.ms-table tr:hover .ms-thumb {
+    transform: scale(1.1);
+    border-color: var(--velveto-accent-primary);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--velveto-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1e2532;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--velveto-accent-primary);
+}
+
+/* Animations */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}

@@ -1,0 +1,16 @@
+<svg width="600" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="grad_creative4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00205B;stop-opacity:1" />
+      <stop offset="33%" style="stop-color:#631D76;stop-opacity:1" />
+      <stop offset="66%" style="stop-color:#CE0058;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F55A00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- "N" as ribbon/mobius strip - continuous, infinite innovation -->
+  <path d="M 150 180 Q 120 200 140 240 L 180 340 Q 200 380 240 360 L 360 280 Q 400 260 420 300 L 460 400 Q 480 440 520 420 
+           Q 540 410 530 380 L 490 280 Q 470 240 430 260 L 310 340 Q 270 360 250 320 L 210 220 Q 190 180 150 180 Z" 
+        fill="url(#grad_creative4)" 
+        opacity="0.95"/>
+</svg>

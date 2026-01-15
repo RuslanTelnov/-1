@@ -1,0 +1,13 @@
+<svg width="300" height="80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Extreme minimal: Just wordmark with subtle color -->
+  <defs>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#631D76;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#CE0058;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <text x="10" y="55" font-family="Helvetica, Arial, sans-serif" font-size="56" font-weight="200" fill="url(#grad2)" letter-spacing="4">
+    newest
+  </text>
+</svg>

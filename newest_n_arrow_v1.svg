@@ -1,0 +1,17 @@
+<svg width="600" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="grad_v1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00205B;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#7D9BC1;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#631D76;stop-opacity:1" />
+      <stop offset="80%" style="stop-color:#CE0058;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F55A00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Sharp, clean N with integrated arrow - Version 1 -->
+  <path d="M 150 200 L 150 450 L 200 450 L 200 280 L 350 450 L 400 450 L 400 200 L 350 200 L 350 370 L 200 200 Z
+           M 420 250 L 520 150 L 520 220 L 550 220 L 550 100 L 430 100 L 430 130 L 500 130 L 400 230 Z" 
+        fill="url(#grad_v1)" 
+        stroke="none"/>
+</svg>
