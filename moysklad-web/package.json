@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@supabase/supabase-js": "^2.86.2",
+    "@supabase/supabase-js": "^2.90.1",
     "docx": "^9.5.1",
     "dotenv": "^17.2.3",
     "framer-motion": "^12.23.25",
