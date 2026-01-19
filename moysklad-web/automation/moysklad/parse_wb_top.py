@@ -265,6 +265,7 @@ def parse_and_save(query, limit=50, page=1):
         for opt in options:
             specs[opt['name']] = opt['value']
         specs['description'] = description
+        specs['is_in_feed'] = True
         
         v4_data = details.get('v4_data', {})
         if v4_data:
@@ -376,7 +377,6 @@ def parse_and_save(query, limit=50, page=1):
             "query": query,
             "rating": p.get('rating', 0),
             "feedbacks": p.get('feedbacks', 0),
-            "kaspi_created": True,
             "updated_at": "now()"
         }
         
@@ -440,7 +440,6 @@ def reparse_existing():
                 "brand": brand,
                 "specs": specs,
                 "in_stock": stock > 0,
-                "kaspi_created": True,
                 "updated_at": "now()" 
             }
             if price_kzt > 0: update_data["price_kzt"] = price_kzt

@@ -36,7 +36,7 @@ export async function GET() {
         const { data: newProducts, error: dbError } = await supabase
             .from('wb_search_results')
             .select('*')
-            .eq('kaspi_created', true);
+            .or('kaspi_created.eq.true,specs->>is_in_feed.eq.true');
 
         if (dbError) throw dbError;
 

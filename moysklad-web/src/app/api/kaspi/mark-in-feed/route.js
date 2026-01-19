@@ -10,11 +10,22 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
         }
 
-        // Update kaspi_created in wb_search_results
+        // Update specs to include in_feed flag
+        const { data: current, error: getError } = await supabase
+            .from('wb_search_results')
+            .select('specs')
+            .eq('id', productId)
+            .single();
+
+        if (getError) throw getError;
+
+        const specs = current.specs || {};
+        specs.is_in_feed = true;
+
         const { error } = await supabase
             .from('wb_search_results')
             .update({
-                kaspi_created: true,
+                specs,
                 conveyor_status: 'in_feed'
             })
             .eq('id', productId);
