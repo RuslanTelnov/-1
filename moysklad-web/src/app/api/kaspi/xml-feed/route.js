@@ -6,8 +6,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        // 1. Fetch base XML from user's external link
-        const BASE_XML_URL = 'https://mskaspi.fixhub.kz/xml/35fde8f355cd299f7a3e26cbe0e4f917.xml';
+        // 1. Fetch base XML from user's external link (Proxy mode)
+        // If config is missing, default to the one we know or throw error
+        const BASE_XML_URL = process.env.KASPI_BASE_XML_URL || 'https://mskaspi.fixhub.kz/xml/35fde8f355cd299f7a3e26cbe0e4f917.xml';
+
         const baseXmlResponse = await fetch(BASE_XML_URL, { cache: 'no-store' });
         if (!baseXmlResponse.ok) {
             throw new Error(`Failed to fetch base XML: ${baseXmlResponse.status}`);
@@ -52,6 +54,7 @@ export async function GET() {
 
             const stock = product.specs?.stock || 0;
             const price = product.price_kzt || 0;
+            const specs = product.specs || {};
 
             const newOffer = {
                 "@_sku": sku,
@@ -66,6 +69,72 @@ export async function GET() {
                 },
                 "price": price
             };
+
+            // Add Description
+            const description = specs.description || product.description;
+            if (description) {
+                newOffer.description = description;
+            }
+
+            // Add Images (YML allows multiple picture tags)
+            // Use specs.image_urls if available (array), else simple image_url
+            let images = specs.image_urls;
+            if (!images || !Array.isArray(images) || images.length === 0) {
+                if (product.image_url) {
+                    images = [product.image_url];
+                } else {
+                    images = [];
+                }
+            }
+            if (images.length > 0) {
+                newOffer.picture = images;
+            }
+
+            // Add Params (Attributes)
+            const params = [];
+            // NEW: Prefer strictly mapped Kaspi attributes if available
+            if (specs.kaspi_attributes && typeof specs.kaspi_attributes === 'object') {
+                // Handle dictionary format: { "Code": "Value" } or { "Code": ["Val1", "Val2"] }
+                // (which is what Python saves)
+                const attrs = Array.isArray(specs.kaspi_attributes) ? specs.kaspi_attributes : Object.entries(specs.kaspi_attributes).map(([code, value]) => ({ code, value }));
+
+                for (const attr of attrs) {
+                    // If it was already array of objects {code, value} (legacy/future proof), use it.
+                    // If it came from Object.entries, attr is {code, value}
+
+                    const values = Array.isArray(attr.value) ? attr.value : [attr.value];
+
+                    for (const v of values) {
+                        params.push({
+                            "@_code": attr.code,
+                            "@_name": attr.name || (attr.code ? attr.code.split('*').pop() : "Attribute"),
+                            "#text": String(v)
+                        });
+                    }
+                }
+            } else {
+                // FALLBACK: Old logic using raw specs keys
+                const ignoredKeys = new Set([
+                    'stock', 'is_closed', 'image_urls', 'is_in_feed', 'description',
+                    'enriched', 'kaspi_created', 'kaspi_upload_status', 'kaspi_upload_id',
+                    'kaspi_sku', 'wb_full_data', 'conveyor_log', 'ms_created', 'kaspi_attributes'
+                ]);
+
+                for (const [key, value] of Object.entries(specs)) {
+                    if (ignoredKeys.has(key)) continue;
+                    if (typeof value === 'object') continue; // Skip stored objects/arrays
+
+                    // Sanitize key/value if needed, but XMLBuilder handles escaping usually
+                    params.push({
+                        "@_name": key,
+                        "#text": String(value)
+                    });
+                }
+            }
+
+            if (params.length > 0) {
+                newOffer.param = params;
+            }
 
             existingOffers.push(newOffer);
         }

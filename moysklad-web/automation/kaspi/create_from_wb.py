@@ -8,6 +8,8 @@ import requests
 # Add current directory to path to import modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from modules.creator import prepare_card_payload, create_card
+from modules.wb_enricher import WBEnricher
+from modules.url_helper import extract_wb_article
 import config
 
 def init_supabase() -> Client:
@@ -38,6 +40,7 @@ def map_wb_to_kaspi(wb_product):
     
     product_name = wb_product.get("name", "")
     product_description = wb_product.get("description", "") or ""
+    raw_attributes = wb_product.get("attributes", {})
     
     # Detect category
     category_name, category_type = KaspiCategoryMapper.detect_category(
@@ -55,7 +58,9 @@ def map_wb_to_kaspi(wb_product):
     kaspi_attributes = KaspiCategoryMapper.generate_attributes(
         product_name,
         product_description,
-        category_type
+        category_type,
+        category_name,
+        raw_attributes=raw_attributes
     )
     
     print(f"🏷️  Generated {len(kaspi_attributes)} attributes", file=sys.stderr)
@@ -93,28 +98,74 @@ def map_wb_to_kaspi(wb_product):
     
     return scraped_data
 
-def create_from_wb(article_id):
+def create_from_wb(article_input):
     """Fetches WB product from Supabase and creates Kaspi card."""
-    print(f"🚀 Starting Kaspi card creation for WB Article: {article_id}")
+    print(f"🚀 Starting Kaspi card creation for: {article_input}")
     
     try:
+        # Extract ID from input (could be a URL)
+        article_id = extract_wb_article(str(article_input))
+        if not article_id:
+            print(f"❌ Could not extract valid WB Article ID from: {article_input}")
+            return False
+            
+        print(f"🆔 Extracted WB Article ID: {article_id}")
+        
         supabase = init_supabase()
         
         # Fetch product from 'products' table (which has enriched data) or fallback to 'wb_top_products'
-        print(f"🔍 Searching for product with Article: {article_id}")
+        print(f"🔍 Searching for product {article_id} in database...")
         
         wb_product = None
         
         # 1. Try 'wb_search_results' (Primary Source)
         # Note: wb_search_results uses 'id' as integer (NM ID)
-        resp2 = supabase.table("wb_search_results").select("*").eq("id", int(article_id)).execute()
-        if resp2.data:
-            wb_product = resp2.data[0]
-            print(f"📦 Found in 'wb_search_results': {wb_product.get('name')}")
+        try:
+            resp2 = supabase.table("wb_search_results").select("*").eq("id", int(article_id)).execute()
+            if resp2.data:
+                wb_product = resp2.data[0]
+                print(f"📦 Found in 'wb_search_results': {wb_product.get('name')}")
+        except Exception as e:
+            print(f"⚠️  Database error: {e}")
                 
         if not wb_product:
-            print(f"❌ Product with article {article_id} not found in 'products' or 'wb_search_results'.")
-            return False
+            print(f"ℹ️  Product {article_id} not found in database. Will attempt to create from WB data.")
+            # Create a minimal object for the enricher
+            wb_product = {
+                "id": int(article_id),
+                "name": f"Product {article_id}", # Placeholder
+                "image_url": f"https://basket-01.wb.ru/vol{int(article_id)//100000}/part{int(article_id)//1000}/{article_id}/images/big/1.webp" # Generic WB image URL logic
+            }
+        
+        # Enrich data from WB public API
+        print(f"✨ Enriching data for WB Article: {article_id}...")
+        wb_product = WBEnricher.enrich_product_data(wb_product)
+        
+        # Update name and description if enriched
+        if wb_product.get("wb_full_data"):
+            full_data = wb_product["wb_full_data"]
+            if full_data.get("imt_name"):
+                wb_product["name"] = full_data["imt_name"]
+            if full_data.get("description"):
+                wb_product["description"] = full_data["description"]
+                
+        # Upsert into wb_search_results (ensures it exists for future use)
+        try:
+            upsert_data = {
+                "id": int(article_id),
+                "name": wb_product.get("name"),
+                "price_kzt": wb_product.get("price_kzt", 0),
+                "image_url": wb_product.get("image_url"),
+                "updated_at": "now()"
+            }
+            # Only add specs if they are interesting
+            if wb_product.get("wb_full_data"):
+                 upsert_data["specs"] = {"enriched": True}
+                 
+            supabase.table("wb_search_results").upsert(upsert_data).execute()
+            print(f"💾 Upserted product {article_id} to wb_search_results.")
+        except Exception as e:
+            print(f"⚠️  Failed to upsert product: {e}")
         
         # Map data
         kaspi_data = map_wb_to_kaspi(wb_product)
@@ -199,6 +250,11 @@ def create_from_wb(article_id):
                     "kaspi_created": True, # Keep this boolean as it exists in table (checked earlier) or is useful
                     "specs": specs
                 }
+                
+                # Add Kaspi Attributes to specs if available
+                if kaspi_data and kaspi_data.get("attributes"):
+                     specs["kaspi_attributes"] = kaspi_data["attributes"]
+                     update_data["specs"] = specs
                 
                 supabase.table("wb_search_results").update(update_data).eq("id", int(article_id)).execute()
                 print(f"🔄 Updated DB status in wb_search_results (specs): ID={upload_id}")

@@ -36,6 +36,8 @@ class KaspiCategoryMapper:
         'игрушка': ('Master - Stuffed toys', 'toys'),
         'плюшевая': ('Master - Stuffed toys', 'toys'),
         'мягкая игрушка': ('Master - Stuffed toys', 'toys'),
+        'кукла': ('Master - Stuffed toys', 'toys'),
+        'пупс': ('Master - Stuffed toys', 'toys'),
         
         # Backpacks
         'рюкзак': ('Master - Backpacks', 'backpacks'),
@@ -406,10 +408,14 @@ class KaspiCategoryMapper:
 
     @classmethod
     def generate_attributes(cls, product_name: str, product_description: str = "", 
-                          category_type: str = None, category_code: str = None) -> Dict[str, str]:
+                          category_type: str = None, category_code: str = None,
+                          raw_attributes: Dict[str, str] = None) -> Dict[str, str]:
         """
         Generate Kaspi attributes based on product data and category.
         """
+        if raw_attributes is None:
+            raw_attributes = {}
+            
         if category_code is None or category_type is None:
             category_code, category_type = cls.detect_category(product_name, product_description)
         
@@ -452,7 +458,7 @@ class KaspiCategoryMapper:
                          return {}
                          
                     # Use AI to fill these attributes
-                    ai_vals = fill_attributes_ai(product_name, product_description, mandatory_attrs)
+                    ai_vals = fill_attributes_ai(product_name, product_description, mandatory_attrs, raw_attributes=raw_attributes)
                     return ai_vals
             except Exception as e:
                 print(f"⚠️ Universal attribute filling failed: {e}", file=sys.stderr)
