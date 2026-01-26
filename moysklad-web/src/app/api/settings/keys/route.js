@@ -49,18 +49,13 @@ export async function GET() {
         }
 
         // Masking helper
-        const mask = (val) => (val && val !== 'Not Set') ? `${val.substring(0, 8)}...` : 'Not Set';
+        const mask = (val) => (val && val !== 'Not Set') ? `${String(val).substring(0, 8)}...` : 'Not Set';
 
         const keys = {
-            DEBUG: {
-                VERSION,
-                TIMESTAMP: new Date().toISOString(),
-                DB_CONNECTED: rowCount > 0,
-                ROWS: rowCount,
-                COLUMNS: columnsFound,
-                ERROR: dbError,
-                ENV_URL: supabaseUrl ? "OK" : "MISSING"
-            },
+            VERSION,
+            DEBUG_ROWS: rowCount,
+            DEBUG_COLUMNS: columnsFound.join(', ') || 'None',
+            DEBUG_ERROR: dbError || 'None',
             // Mapping with explicit mapping to existing DB columns
             REST_API_KEY: dbKeys.rest_api_key || process.env.REST_API_KEY || 'Not Set',
             SUPABASE_URL: supabaseUrl || 'Not Set',
