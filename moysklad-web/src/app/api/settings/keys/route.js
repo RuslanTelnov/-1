@@ -9,16 +9,27 @@ export async function GET() {
 
         let dbKeys = {};
         try {
-            console.log("Attempting to fetch from client_configs table...");
-            const { data, error } = await supabase.table('client_configs').select('*').limit(1).single();
+            console.log("Checking Supabase client...");
+            const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
 
-            if (error) {
-                console.error("Supabase Error:", error.message, error.details);
-            } else if (data) {
-                console.log("Data found in DB. Keys:", Object.keys(data));
-                dbKeys = data;
+            if (!supabaseUrl || !supabaseKey) {
+                console.error("Supabase URL or Key missing in env!");
             } else {
-                console.warn("No data returned from client_configs.");
+                // Ensure we have a valid client. Initialize locally if the import is problematic.
+                const { createClient } = require('@supabase/supabase-js');
+                const client = createClient(supabaseUrl, supabaseKey);
+
+                console.log("Attempting to fetch from client_configs table...");
+                const { data, error } = await client.table('client_configs').select('*').limit(1).single();
+
+                if (error) {
+                    console.error("Supabase Error:", error.message);
+                } else if (data) {
+                    console.log("Data found in DB. Record ID:", data.id);
+                    dbKeys = data;
+                } else {
+                    console.warn("No data returned from client_configs.");
+                }
             }
         } catch (e) {
             console.error("Database access exception:", e.message);
