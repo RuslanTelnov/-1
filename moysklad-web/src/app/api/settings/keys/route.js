@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
 export async function GET() {
     try {
         // Try to fetch from Supabase if envs are missing (for Vercel persistence)
         let dbKeys = {};
         try {
-            const { supabase } = require('@/lib/supabase');
-            const { data } = await supabase.table('client_configs').select('*').limit(1).single();
-            if (data) dbKeys = data;
+            const { data, error } = await supabase.table('client_configs').select('*').limit(1).single();
+            if (data && !error) dbKeys = data;
         } catch (e) {
             // Table might not exist yet
         }
