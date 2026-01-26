@@ -56,3 +56,16 @@ yarn-error.log
 _old_version/
 _backup_fresh_install/
 .vercel
+*.log
+*.json
+!moysklad-web/automation/kaspi/data/kaspi_categories.json
+check_*.py
+debug_*.py
+find_*.py
+inspect_*.py
+verify_*.py
+test_*.py
+wb_enricher_debug.html
+price.xml
+kaspi_price_manual.xml
+kaspi_upload.xml

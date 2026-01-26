@@ -79,7 +79,7 @@ def run_conveyor(single_pass=False, skip_parser=False):
     
     # 1. Setup MS Context
     folder_meta = ms_creator.get_or_create_group("Parser WB")
-    price_type_meta = ms_creator.get_price_type("Цена продажи")
+    price_type_meta = ms_creator.get_price_type("Розничная цена")
     preorder_meta, preorder_id = get_preorder_attribute_beta(ms_creator.HEADERS)
     
     extra_attrs = []

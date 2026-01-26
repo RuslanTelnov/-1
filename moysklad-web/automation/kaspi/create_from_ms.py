@@ -15,8 +15,12 @@ def init_supabase() -> Client:
     # Try different .env locations
     env_paths = [
         os.path.join(os.getcwd(), "moysklad-web", ".env.local"),
+        os.path.join(os.getcwd(), ".env.local"),
         os.path.join(os.getcwd(), ".env"),
-        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "moysklad-web", ".env.local")
+        # Go up from script location: automation/kaspi -> automation -> moysklad-web -> .env.local
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env.local"),
+        # automation/kaspi -> moysklad-web root
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "moysklad-web", ".env.local"),
     ]
     
     for path in env_paths:
@@ -157,8 +161,12 @@ def create_from_ms(article):
             return False
         
         # Prepare payload
-        # Prepare payload
-        sku = f"{article}-K"
+        # Priority 1: Use 'code' from MoySklad (standard integration style)
+        # Priority 2: Use article-K (previous custom style)
+        sku = product.get('code')
+        if not sku:
+            sku = f"{article}-K"
+            
         payload = prepare_card_payload(kaspi_data, sku, custom_barcode_prefix="201")
         if kaspi_data.get("images"):
              payload["images"] = [{"url": img} for img in kaspi_data["images"]]

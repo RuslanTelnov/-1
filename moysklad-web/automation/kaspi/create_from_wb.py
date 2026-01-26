@@ -174,8 +174,22 @@ def create_from_wb(article_input):
             return False
         
         # Prepare payload
-        # Use WB article as SKU (Exact Match with MoySklad)
-        sku = str(article_id)
+        # Priority 1: Use 'code' from MoySklad (standard integration style)
+        # Priority 2: Use article-K (previous custom style) - using article_id as fallback
+        sku = None
+        
+        # Check 'products' table for the code (synced from MS)
+        try:
+             res_ms = supabase.table("products").select("code").eq("article", str(article_id)).execute()
+             if res_ms.data and res_ms.data[0].get("code"):
+                  sku = res_ms.data[0]["code"]
+                  print(f"🔗 Found MoySklad Code to use as SKU: {sku}")
+        except:
+             pass
+             
+        if not sku:
+             sku = f"{article_id}"
+             print(f"⚠️  MoySklad Code not found for {article_id}. Using raw ID as SKU: {sku}")
         
         # Ensure we have images (Kaspi requires at least one, and at least 500x500)
         # 1. Try from Specs (Best Quality from WB)

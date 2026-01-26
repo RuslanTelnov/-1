@@ -103,12 +103,31 @@ export default function Home() {
                     </span>
                 </div>
                 <div style={{
-                    color: 'var(--velveto-text-secondary)',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    letterSpacing: '0.05em'
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2rem'
                 }}>
-                    ADMIN PANEL
+                    <div style={{
+                        color: 'var(--velveto-text-secondary)',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        letterSpacing: '0.05em'
+                    }}>
+                        ADMIN PANEL
+                    </div>
+                    <Link href="/settings">
+                        <motion.div
+                            whileHover={{ rotate: 90 }}
+                            style={{
+                                cursor: 'pointer',
+                                fontSize: '1.4rem',
+                                opacity: 0.7,
+                                display: 'flex'
+                            }}
+                        >
+                            ⚙️
+                        </motion.div>
+                    </Link>
                 </div>
             </header>
 

@@ -38,17 +38,26 @@ export async function GET() {
             existingOffers = existingOffers ? [existingOffers] : [];
         }
 
-        // 3. Fetch products from Supabase
-        // CRITICAL: Only items with price > 500 (Kaspi limit) and marked as created.
-        // Also: items need ~24h to be indexed by Kaspi after creation to avoid "Unrecognized" errors.
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        // 3. Fetch products from BOTH tables to get the 'code' (MoySklad Code)
+        // We'll fetch all products first to map them by article
+        const { data: allMSProducts, error: msError } = await supabase
+            .from('products')
+            .select('article, code');
+
+        if (msError) console.error("MS Products fetch error:", msError);
+
+        const codeMap = {};
+        if (allMSProducts) {
+            allMSProducts.forEach(p => {
+                if (p.article && p.code) codeMap[String(p.article)] = p.code;
+            });
+        }
 
         const { data: newProducts, error: dbError } = await supabase
             .from('wb_search_results')
             .select('*')
             .filter('price_kzt', 'gt', 500)
-            .eq('kaspi_created', true)
-            .lt('updated_at', oneDayAgo); // Only items created/updated > 24h ago
+            .eq('kaspi_created', true);
 
         if (dbError) throw dbError;
 
@@ -56,22 +65,42 @@ export async function GET() {
         const existingSkus = new Set(existingOffers.map(o => String(o['@_sku'])));
 
         for (const product of newProducts) {
-            const sku = String(product.id);
+            let sku = String(product.id); // Primary fallback: just the WB ID
+            const specs = product.specs || {};
+
+            // Priority 1: Explicitly saved SKU in specs
+            if (specs.kaspi_sku) {
+                sku = specs.kaspi_sku;
+            }
+            // Priority 2: MoySklad Code (found via article mapping)
+            else if (codeMap[String(product.id)]) {
+                sku = codeMap[String(product.id)];
+            }
+            // Priority 3: Fallback to raw ID (No suffixes)
+            else {
+                sku = `${product.id}`;
+            }
+
             if (existingSkus.has(sku)) continue;
 
             const retailDivisor = parseFloat(process.env.RETAIL_DIVISOR || '0.3');
             const stock = product.specs?.stock || 0;
             const price = Math.round(product.price_kzt / retailDivisor);
 
+            // Sanitize and limit model name length (Kaspi limit is often ~70-100 chars)
+            let modelName = product.name || "Unknown Product";
+            if (modelName.length > 100) {
+                modelName = modelName.substring(0, 97) + "...";
+            }
+
             const newOffer = {
                 "@_sku": sku,
-                "model": product.name,
-                "brand": product.brand || "Generic",
+                "model": modelName,
+                "brand": (product.brand && product.brand !== "Unknown") ? product.brand : "Generic",
                 "availabilities": {
                     "availability": {
                         "@_available": stock > 0 ? "yes" : "no",
-                        "@_storeId": "PP1",
-                        "@_stockCount": stock
+                        "@_storeId": "PP1"
                     }
                 },
                 "price": price

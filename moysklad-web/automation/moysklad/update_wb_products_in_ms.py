@@ -23,7 +23,7 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-def get_price_type(name="Цена продажи"):
+def get_price_type(name="Розничная цена"):
     """Get price type meta"""
     url = f"{BASE_URL}/context/companysettings/pricetype"
     try:
@@ -108,7 +108,7 @@ def main():
     print("🚀 Starting WB Product Refinement in MoySklad...")
 
     # 1. Get Price Type
-    price_type_meta = get_price_type("Цена продажи")
+    price_type_meta = get_price_type("Розничная цена")
     if not price_type_meta:
         print("❌ Failed to get price type. Aborting.")
         return

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 # Load env from moysklad-web
-load_dotenv(os.path.join(os.getcwd(), "..", "moysklad-web", ".env.local"))
+load_dotenv(os.path.join(os.getcwd(), "moysklad-web", ".env.local"))
 # Also load local .env for MS credentials if they are there
 load_dotenv(os.path.join(os.getcwd(), ".env"))
 
@@ -89,6 +89,7 @@ def sync_products():
             ms_id = p['id']
             name = p['name']
             article = p.get('article')
+            code = p.get('code')
             
             if not article:
                 # print(f"⚠️ Skipping {name}: No article")
@@ -112,6 +113,7 @@ def sync_products():
                 "moysklad_id": ms_id,
                 "name": name,
                 "article": article,
+                "code": code,
                 "price": sale_price,
                 "min_price": min_price,
                 "cost_price": cost_price,

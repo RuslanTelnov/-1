@@ -13,7 +13,7 @@ class KaspiCategoryMapper:
         "лекарство", "аптека", "алкоголь", "водка", "вино", "пиво", "сигареты", "табак", 
         "оружие", "нож", "пистолет", "бад", "витамины", "химия", "ядохимикаты",
         "интим", "sex", "эротика", "порно", "реплика", "копия", "1:1", "replica",
-        "золото", "серебро", "бриллиант", "брильянт", "колецо", "серьги", 
+        "золото", "серебро", "бриллиант", "брильянт", 
         "медицинский", "шприц", "игла", "ветеринар", "корм для", "пиротехника", "фейерверк"
     ]
 
@@ -34,8 +34,19 @@ class KaspiCategoryMapper:
         'saucer': ('Master - Cups and saucers sets', 'mugs'),
         
         # Toys
-        'игруш': ('Master - Stuffed toys', 'toys'),
         'плюш': ('Master - Stuffed toys', 'toys'),
+        'медведь': ('Master - Stuffed toys', 'toys'),
+        'мишка': ('Master - Stuffed toys', 'toys'),
+        
+        # Model Cars (Correct category for Hot Wheels etc)
+        'hot wheels': ('Master - Model cars and other vehicles', 'model_cars'),
+        'машинка металлическая': ('Master - Model cars and other vehicles', 'model_cars'),
+        'коллекционная модель': ('Master - Model cars and other vehicles', 'model_cars'),
+        'масштабная модель': ('Master - Model cars and other vehicles', 'model_cars'),
+        'модель 1:': ('Master - Model cars and other vehicles', 'model_cars'),
+        
+        # General Toys (Fallback)
+        'игруш': ('Master - Stuffed toys', 'toys'),
         'кукл': ('Master - Stuffed toys', 'toys'),
         'пупс': ('Master - Stuffed toys', 'toys'),
         'светофор': ('Master - Stuffed toys', 'toys'),
@@ -43,8 +54,6 @@ class KaspiCategoryMapper:
         'машинк': ('Master - Stuffed toys', 'toys'),
         'машина': ('Master - Stuffed toys', 'toys'),
         'волчок': ('Master - Stuffed toys', 'toys'),
-        'медведь': ('Master - Stuffed toys', 'toys'),
-        'мишка': ('Master - Stuffed toys', 'toys'),
         
         # Educational / hobby
         'набор для опыт': ('Master - Board games', 'games'), # or another relevant category
@@ -87,6 +96,32 @@ class KaspiCategoryMapper:
         'lanvin': ('Master - Perfumes', 'perfumes'),
         'paco': ('Master - Perfumes', 'perfumes'),
         'baccarat': ('Master - Perfumes', 'perfumes'),
+        
+        # Creative / Hobbies
+        'набор для творчеств': ('Master - Drawing and coloring kits', 'drawing_kits'),
+        'доски для выжигания': ('Master - Tools and craft kits', 'craft_kits'),
+        'холст': ('Master - Canvases', 'canvases'),
+        'картина по номер': ('Master - Paintings by numbers', 'paintings_numbers'),
+        'бисер': ('Master - Beadwork and weaving kits', 'beadwork'),
+        'слайм': ('Master - Kinetic sand and slime', 'slimes'),
+        'лепка': ('Master - Modeling kits', 'modeling'),
+        'пластилин': ('Master - Modeling kits', 'modeling'),
+        'иглы': ('Master - Sewing needles', 'sewing'),
+        'игл для': ('Master - Sewing needles', 'sewing'),
+        'леденец': ('Master - Candies and lollipops', 'sweets'),
+        'конфет': ('Master - Candies and lollipops', 'sweets'),
+        'курс': ('Master - Educational materials', 'education'),
+        'пакет': ('Master - Educational materials', 'education'),
+        'инструкция': ('Master - Educational materials', 'education'),
+        'онлайн': ('Master - Educational materials', 'education'),
+        'видеоурок': ('Master - Educational materials', 'education'),
+        'наклейк': ('Master - Decorative stickers', 'stickers'),
+        'стикер': ('Master - Decorative stickers', 'stickers'),
+        'эпоксидн': ('Master - Resin art kits', 'resinart'),
+        'смола': ('Master - Resin art kits', 'resinart'),
+        'чехол': ('Master - Cases for mobile phones', 'cases'),
+        'стекло для': ('Master - Screen protectors for mobile phones', 'cases'),
+        'пленка для': ('Master - Screen protectors for mobile phones', 'cases'),
     }
     
     @classmethod
@@ -234,6 +269,15 @@ class KaspiCategoryMapper:
             'mascaras': [
                 'Mascaras*Type', 'Mascaras*Effect', 'Mascaras*Colour',
                 'Mascaras*Features', 'Decorative cosmetics*Country'
+            ],
+            'model_cars': [
+                'Model cars and other vehicles*Type',
+                'Model cars and other vehicles*Scale',
+                'Model cars and other vehicles*Model',
+                'Toys*Age',
+                'Toys*Gender',
+                'Toys*Color',
+                'Toys*Material'
             ]
         }
         
@@ -432,6 +476,8 @@ class KaspiCategoryMapper:
             return cls.generate_attributes_for_games(product_name, product_description)
         elif category_type == 'perfumes':
             return cls.generate_attributes_for_perfumes(product_name, product_description)
+        elif category_type == 'model_cars':
+            return cls.generate_attributes_for_model_cars(product_name, product_description)
         
         # Universal AI filling for other categories
         if category_code:
@@ -505,6 +551,34 @@ class KaspiCategoryMapper:
             attributes["Perfumes*Size"] = f"{vol} мл"
             attributes["Perfumes*Size1"] = vol
             
+        return attributes
+
+    @staticmethod
+    def generate_attributes_for_model_cars(product_name: str, product_description: str = "") -> Dict[str, str]:
+        """Generate Kaspi attributes for Model Cars."""
+        text = (product_name + " " + product_description).lower()
+        
+        attributes = {
+            "Model cars and other vehicles*Type": "легковой автомобиль",
+            "Model cars and other vehicles*Scale": "1:64",
+            "Model cars and other vehicles*Model": product_name[:50],
+            "Toys*Age": "От 3 лет",
+            "Toys*Gender": "Для мальчиков",
+            "Toys*Color": "Разноцветный",
+            "Toys*Material": "Металл"
+        }
+        
+        # Detect Scale
+        scale_match = re.search(r'1:(\d+)', text)
+        if scale_match:
+            attributes["Model cars and other vehicles*Scale"] = f"1:{scale_match.group(1)}"
+            
+        # Detect Color
+        if "черн" in text: attributes["Toys*Color"] = "Черный"
+        elif "красн" in text: attributes["Toys*Color"] = "Красный"
+        elif "син" in text: attributes["Toys*Color"] = "Синий"
+        elif "бел" in text: attributes["Toys*Color"] = "Белый"
+        
         return attributes
 
     @staticmethod

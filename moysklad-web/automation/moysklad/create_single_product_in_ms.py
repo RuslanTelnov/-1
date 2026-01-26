@@ -60,7 +60,7 @@ def get_or_create_group(name):
         return None
     return None
 
-def get_price_type(name="Цена продажи"):
+def get_price_type(name="Розничная цена"):
     """Get price type meta"""
     url = f"{BASE_URL}/context/companysettings/pricetype"
     try:
@@ -119,7 +119,7 @@ def create_product(name, article, price, image_urls=None):
     if not folder_meta:
         return {"error": "Failed to get target folder"}
 
-    price_type_meta = get_price_type("Цена продажи")
+    price_type_meta = get_price_type("Розничная цена")
     if not price_type_meta:
         return {"error": "Failed to get price type"}
 

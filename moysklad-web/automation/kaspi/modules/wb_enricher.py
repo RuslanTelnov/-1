@@ -8,6 +8,7 @@ to enrich basic product data with attributes, specifications, and other details.
 import requests
 import json
 import sys
+import os
 from typing import Dict, Optional, List
 
 
@@ -15,135 +16,72 @@ class WBEnricher:
     """Enriches WB product data by fetching from public API."""
     
     @staticmethod
+    def get_basket_number(nm_id):
+        vol = nm_id // 100000
+        part = nm_id // 1000
+        return vol, part
+
+    @staticmethod
     def fetch_wb_product_details(nm_id: int) -> Optional[Dict]:
         """
-        Fetch full product details from WB using browser automation.
-        
-        Args:
-            nm_id: Wildberries nomenclature ID (article number)
-            
-        Returns:
-            Dictionary with product details or None if failed
+        Fetch full product details from WB using fast JSON APIs.
         """
-        from playwright.sync_api import sync_playwright
-        import time
+        vol, part = WBEnricher.get_basket_number(nm_id)
+        details = {}
+        host = None
         
-        url = f"https://www.wildberries.ru/catalog/{nm_id}/detail.aspx"
+        print(f"🔍 Fetching details for {nm_id} via JSON API...", file=sys.stderr)
         
+        # 1. Fetch info/ru/card.json (Basic info & Attributes)
+        for i in range(1, 41):
+            h = f"basket-{i:02d}.wbbasket.ru"
+            url = f"https://{h}/vol{vol}/part{part}/{nm_id}/info/ru/card.json"
+            try:
+                resp = requests.get(url, timeout=2)
+                if resp.status_code == 200:
+                    details = resp.json()
+                    host = h
+                    break
+            except:
+                continue
+        
+        # 2. Fetch v4/detail (Pricing, Images count, etc.)
+        v4_url = f"https://card.wb.ru/cards/v4/detail?appType=1&curr=kzt&dest=82&nm={nm_id}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
         try:
-            with sync_playwright() as p:
-                browser = p.chromium.launch(
-                    headless=True,
-                    args=[
-                        "--disable-blink-features=AutomationControlled"
-                    ]
-                )
-                context = browser.new_context(
-                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                )
-                page = context.new_page()
-                
-                print(f"🌐 Navigating to {url}...", file=sys.stderr)
-                page.goto(url, wait_until="domcontentloaded", timeout=60000)
-                
-                # Scroll down as in debug script
-                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-                time.sleep(5)  # Wait longer for dynamic content
-                
-                # Extract data from page
-                data = {}
-                
-                # Get product name
-                try:
-                    # Strategy 1: exact match
-                    name_elem = page.locator('h1.product-page__title')
-                    if name_elem.count() > 0:
-                        data['imt_name'] = name_elem.inner_text().strip()
-                    else:
-                        # Strategy 2: new selector
-                        name_elem = page.locator('.productImtName--gQ7gz')
-                        if name_elem.count() > 0:
-                             data['imt_name'] = name_elem.inner_text().strip()
-                except:
-                    print("⚠️  Could not extract product name", file=sys.stderr)
-                    data['imt_name'] = ""
-                
-                # Get description
-                try:
-                    desc_elem = page.locator('.product-page__description-text')
-                    if desc_elem.count() > 0:
-                        data['description'] = desc_elem.inner_text().strip()
-                except:
-                    data['description'] = ""
-                
-                # DEBUG: Save HTML to check what we see
-                with open("wb_enricher_debug.html", "w", encoding="utf-8") as f:
-                    f.write(page.content())
-                print("📋 Saved wb_enricher_debug.html for inspection", file=sys.stderr)
-
-                # Get attributes from specifications table
-                options = []
-                try:
-                    # Strategy 1: old table
-                    spec_rows = page.locator('.product-params__table tr').all()
-                    print(f"DEBUG: Strategy 1 found {len(spec_rows)} rows", file=sys.stderr)
+            v4_resp = requests.get(v4_url, headers=headers, timeout=5)
+            if v4_resp.status_code == 200:
+                v4_data = v4_resp.json()
+                products = v4_data.get('data', {}).get('products', []) or v4_data.get('products', [])
+                if products:
+                    details['v4_data'] = products[0]
                     
-                    if not spec_rows:
-                        # Strategy 2: specific new table class
-                        spec_rows = page.locator('.table--CGApj tr').all()
-                        print(f"DEBUG: Strategy 2 found {len(spec_rows)} rows", file=sys.stderr)
-
-                    if not spec_rows:
-                        # Strategy 3: generic table
-                        spec_rows = page.locator('table tr').all()
-                        print(f"DEBUG: Strategy 3 found {len(spec_rows)} rows", file=sys.stderr)
-                        
-                    for i, row in enumerate(spec_rows):
-                        try:
-                            # Try standard th/td structure
-                            name_elem = row.locator('th').first
-                            value_elem = row.locator('td').first
-                            
-                            # Debug row content
-                            # print(f"DEBUG: Row {i} text: {row.inner_text()}", file=sys.stderr)
-                            
-                            if name_elem.count() > 0 and value_elem.count() > 0:
-                                name = name_elem.inner_text().strip()
-                                value = value_elem.inner_text().strip()
-                                
-                                if name and value:
-                                    options.append({
-                                        'name': name,
-                                        'value': value
-                                    })
-                        except Exception as e:
-                            print(f"DEBUG: Error in row {i}: {e}", file=sys.stderr)
-                            continue
-                except Exception as e:
-                    print(f"⚠️  Could not extract specifications: {e}", file=sys.stderr)
-                
-                data['options'] = options
-                data['nm_id'] = nm_id
-                
-                browser.close()
-                
-                print(f"✅ Extracted {len(options)} attributes from page", file=sys.stderr)
-                return data
-                
+                    # Ensure images are available
+                    pics_count = products[0].get('pics', 0)
+                    image_urls = []
+                    # Try to use host found earlier or fallback
+                    active_host = host or "basket-01.wbbasket.ru"
+                    for i_img in range(1, min(max(pics_count, 1), 6)):
+                        image_urls.append(f"https://{active_host}/vol{vol}/part{part}/{nm_id}/images/big/{i_img}.webp")
+                    details['image_urls'] = image_urls
+                    
+                    # Store name and description if not already in details
+                    if 'imt_name' not in details and products[0].get('name'):
+                         details['imt_name'] = products[0].get('name')
         except Exception as e:
-            print(f"❌ Error fetching WB product details: {e}", file=sys.stderr)
-            return None
+            print(f"  ⚠️ Error fetching v4 details: {e}", file=sys.stderr)
+            
+        if details:
+            print(f"✅ Successfully fetched data from API for {nm_id}", file=sys.stderr)
+            return details
+        return None
     
     @staticmethod
     def extract_attributes(wb_data: Dict) -> Dict[str, str]:
         """
         Extract and structure attributes from WB product data.
-        
-        Args:
-            wb_data: Raw WB product data from basket API
-            
-        Returns:
-            Dictionary of attribute name -> value
         """
         attributes = {}
         
@@ -165,12 +103,6 @@ class WBEnricher:
     def enrich_product_data(basic_product: Dict) -> Dict:
         """
         Enrich basic product data with full WB details.
-        
-        Args:
-            basic_product: Basic product data from database
-            
-        Returns:
-            Enriched product data with full attributes
         """
         nm_id = basic_product.get('id')
         if not nm_id:
@@ -192,16 +124,17 @@ class WBEnricher:
         enriched['attributes'] = attributes
         enriched['wb_full_data'] = wb_data  # Keep full data for reference
         
-        # Add additional fields if available
-        if 'vendor_code' in wb_data:
-            enriched['vendor_code'] = wb_data['vendor_code']
-        
-        # Extract category info
-        if 'subj_name' in wb_data:
-            enriched['subject_name'] = wb_data['subj_name']
-        if 'subj_root_name' in wb_data:
-            enriched['subject_root_name'] = wb_data['subj_root_name']
-        
+        if 'imt_name' in wb_data:
+             enriched['name'] = wb_data['imt_name']
+             
+        if 'image_urls' in wb_data and wb_data['image_urls']:
+             enriched['image_url'] = wb_data['image_urls'][0]
+             if 'specs' not in enriched or not isinstance(enriched['specs'], dict):
+                  enriched['specs'] = {}
+             enriched['specs']['image_urls'] = wb_data['image_urls']
+        elif wb_data.get('v4_data', {}).get('pics') == 0:
+             print(f"⚠️  No images found for WB product {nm_id}", file=sys.stderr)
+
         print(f"✅ Enriched product with {len(attributes)} attributes", file=sys.stderr)
         return enriched
 

@@ -55,7 +55,7 @@ def get_or_create_group(name):
         print(f"❌ Error getting/creating group: {e}")
     return None
 
-def get_price_type(name="Цена продажи"):
+def get_price_type(name="Розничная цена"):
     """Get price type meta"""
     url = f"{BASE_URL}/context/companysettings/pricetype"
     try:
@@ -229,14 +229,26 @@ def create_product_in_ms(product, folder_meta, price_type_meta, extra_attributes
     # Sync to Supabase 'products' table for Dashboard
     if ms_product_id:
         try:
+            # Fetch full product to get 'code' if we just created it or it exists
+            ms_code = None
+            try:
+                resp_info = requests.get(f"{BASE_URL}/entity/product/{ms_product_id}", headers=HEADERS)
+                if resp_info.status_code == 200:
+                    ms_code = resp_info.json().get('code')
+            except:
+                pass
+
             # Upsert into products table
             db_data = {
                 "name": name,
                 "article": wb_id,
                 "moysklad_id": ms_product_id,
                 "price": price, # Use actual price from WB
-                "image_url": image_url,
+                "code": ms_code,
             }
+            # Only add image_url if provided (avoiding undefined errors)
+            if product.get('image_url'):
+                db_data["image_url"] = product.get('image_url')
             supabase.table("products").upsert(db_data, on_conflict="article").execute()
             print(f"   💾 Synced to Supabase Dashboard: {name} - {price} ₸")
         except Exception as e:
@@ -257,7 +269,7 @@ def main():
         return
 
     # 2. Get Price Type
-    price_type_meta = get_price_type("Цена продажи")
+    price_type_meta = get_price_type("Розничная цена")
     if not price_type_meta:
         print("❌ Failed to get price type. Aborting.")
         return
