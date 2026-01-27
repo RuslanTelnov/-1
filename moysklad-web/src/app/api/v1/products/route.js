@@ -4,7 +4,7 @@ import { validateApiKey } from '@/lib/api-auth';
 
 export async function GET(request) {
     // 1. Authenticate
-    const authError = validateApiKey(request);
+    const authError = await validateApiKey(request);
     if (authError) return authError;
 
     // 2. Parse Query Params

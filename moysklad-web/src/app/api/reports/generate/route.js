@@ -1,9 +1,11 @@
-
 import { NextResponse } from 'next/server';
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, WidthType, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { supabase } from '@/lib/supabase';
+import { validateApiKey } from '@/lib/api-auth';
 
-export async function GET() {
+export async function GET(request) {
+    const authError = await validateApiKey(request);
+    if (authError) return authError;
     try {
         // 1. Fetch Data Stats
         // We'll just fetch all rows (limit 2000?) or use count queries.

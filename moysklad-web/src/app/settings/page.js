@@ -6,26 +6,66 @@ import { motion } from 'framer-motion'
 export default function Settings() {
     const [keys, setKeys] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [copied, setCopied] = useState(null)
+    const [saving, setSaving] = useState(false)
+    const [message, setMessage] = useState({ type: '', text: '' })
 
     useEffect(() => {
-        fetch('/api/settings/keys')
-            .then(res => res.json())
-            .then(data => {
-                setKeys(data)
-                setLoading(false)
-            })
+        fetchKeys()
     }, [])
 
-    const handleCopy = (key, value) => {
-        navigator.clipboard.writeText(value)
-        setCopied(key)
-        setTimeout(() => setCopied(null), 2000)
+    const fetchKeys = async () => {
+        setLoading(true)
+        setMessage({ type: '', text: '' })
+        try {
+            const res = await fetch('/api/settings/keys')
+            const data = await res.json()
+
+            if (res.ok) {
+                setKeys(data)
+            } else {
+                console.error('API error:', data.error)
+                setMessage({ type: 'error', text: data.error || 'Failed to load settings from server. Check logs.' })
+                setKeys(null)
+            }
+        } catch (error) {
+            console.error('Fetch error:', error)
+            setMessage({ type: 'error', text: 'Network error or server is down. Could not fetch settings.' })
+        }
+        setLoading(false)
+    }
+
+    const handleChange = (name, value) => {
+        setKeys(prev => ({
+            ...prev,
+            [name]: value
+        }))
+    }
+
+    const handleSave = async () => {
+        setSaving(true)
+        setMessage({ type: '', text: '' })
+        try {
+            const res = await fetch('/api/settings/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(keys)
+            })
+            const result = await res.json()
+            if (result.success) {
+                setMessage({ type: 'success', text: 'Settings saved successfully!' })
+                setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+                fetchKeys() // Refresh to get masked values back
+            } else {
+                setMessage({ type: 'error', text: result.error || 'Failed to save settings' })
+            }
+        } catch (error) {
+            setMessage({ type: 'error', text: 'Error saving settings' })
+        }
+        setSaving(false)
     }
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--velveto-bg-primary)' }}>
-            {/* Header */}
             <header style={{
                 padding: '1.5rem 3rem',
                 display: 'flex',
@@ -54,18 +94,79 @@ export default function Settings() {
                 </div>
             </header>
 
-            <main className="container" style={{ paddingTop: '4rem', maxWidth: '1000px', margin: '0 auto' }}>
-                <div style={{ marginBottom: '3rem' }}>
-                    <Link href="/">
-                        <div style={{ color: 'var(--velveto-accent-primary)', cursor: 'pointer', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            ← На главную
-                        </div>
-                    </Link>
-                    <h2 style={{ fontSize: '2.5rem', fontWeight: '200', color: 'var(--velveto-text-primary)' }}>НАСТРОЙКИ</h2>
+            <main className="container" style={{ paddingTop: '4rem', maxWidth: '1000px', margin: '0 auto', paddingBottom: '4rem' }}>
+                <div style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div>
+                        <Link href="/">
+                            <div style={{ color: 'var(--velveto-accent-primary)', cursor: 'pointer', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                ← На главную
+                            </div>
+                        </Link>
+                        <h2 style={{ fontSize: '2.5rem', fontWeight: '200', color: 'var(--velveto-text-primary)' }}>НАСТРОЙКИ</h2>
+                    </div>
+
+                    <button
+                        onClick={handleSave}
+                        disabled={saving || loading}
+                        style={{
+                            background: 'var(--velveto-accent-primary)',
+                            color: '#000',
+                            border: 'none',
+                            padding: '0.8rem 2rem',
+                            borderRadius: '4px',
+                            fontWeight: '600',
+                            cursor: (saving || loading) ? 'not-allowed' : 'pointer',
+                            opacity: (saving || loading) ? 0.7 : 1,
+                            transition: 'all 0.2s',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em'
+                        }}
+                    >
+                        {saving ? 'Сохранение...' : 'Сохранить изменения'}
+                    </button>
                 </div>
+
+                {message.text && (
+                    <div style={{
+                        padding: '1rem',
+                        marginBottom: '2rem',
+                        borderRadius: '4px',
+                        background: message.type === 'success' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                        border: `1px solid ${message.type === 'success' ? '#4CAF50' : '#F44336'}`,
+                        color: message.type === 'success' ? '#4CAF50' : '#F44336',
+                        textAlign: 'center'
+                    }}>
+                        {message.text}
+                    </div>
+                )}
 
                 {loading ? (
                     <div style={{ color: 'var(--velveto-text-secondary)' }}>Загрузка...</div>
+                ) : !keys ? (
+                    <div style={{
+                        padding: '3rem',
+                        textAlign: 'center',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px dashed rgba(255,255,255,0.1)',
+                        borderRadius: '8px'
+                    }}>
+                        <p style={{ color: 'var(--velveto-text-secondary)', marginBottom: '1.5rem' }}>
+                            Не удалось загрузить настройки. Пожалуйста, проверьте подключение к базе данных.
+                        </p>
+                        <button
+                            onClick={fetchKeys}
+                            style={{
+                                background: 'transparent',
+                                border: '1px solid var(--velveto-accent-primary)',
+                                color: 'var(--velveto-accent-primary)',
+                                padding: '0.5rem 1.5rem',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Повторить попытку
+                        </button>
+                    </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         {Object.entries(keys).map(([name, value]) => (
@@ -78,7 +179,7 @@ export default function Settings() {
                                     padding: '1.5rem 2rem',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    gap: '0.5rem',
+                                    gap: '0.8rem',
                                     border: '1px solid rgba(255,255,255,0.03)'
                                 }}
                             >
@@ -89,35 +190,71 @@ export default function Settings() {
                                         textTransform: 'uppercase',
                                         letterSpacing: '0.1em'
                                     }}>
-                                        {name}
+                                        {name.replace(/_/g, ' ')}
                                     </span>
-                                    <button
-                                        onClick={() => handleCopy(name, value)}
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                                    <input
+                                        type={name.includes('PASSWORD') || name.includes('TOKEN') || name.includes('KEY') ? "text" : "text"}
+                                        value={value === 'Not Set' ? '' : value}
+                                        placeholder={value === 'Not Set' ? 'Введите значение...' : ''}
+                                        onChange={(e) => handleChange(name, e.target.value)}
+                                        disabled={name === 'SUPABASE_URL'}
                                         style={{
-                                            background: 'rgba(255,255,255,0.05)',
-                                            border: 'none',
-                                            color: '#fff',
-                                            padding: '4px 12px',
+                                            fontSize: '1rem',
+                                            color: 'var(--velveto-text-primary)',
+                                            fontFamily: 'monospace',
+                                            background: 'rgba(0,0,0,0.3)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            padding: '0.8rem',
                                             borderRadius: '4px',
-                                            fontSize: '0.7rem',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s'
+                                            flex: 1,
+                                            outline: 'none',
+                                            transition: 'border-color 0.2s'
                                         }}
-                                    >
-                                        {copied === name ? '✓ Скопировано' : 'Копировать'}
-                                    </button>
+                                        onFocus={(e) => e.target.style.borderColor = 'var(--velveto-accent-primary)'}
+                                        onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                                    />
+                                    {value && value !== 'Not Set' && (
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(value);
+                                                // Minimal feedback
+                                                const btn = document.getElementById(`copy-${name}`);
+                                                if (btn) {
+                                                    const oldText = btn.innerText;
+                                                    btn.innerText = '✓';
+                                                    btn.style.color = '#4CAF50';
+                                                    setTimeout(() => {
+                                                        btn.innerText = oldText;
+                                                        btn.style.color = 'var(--velveto-text-secondary)';
+                                                    }, 2000);
+                                                }
+                                            }}
+                                            id={`copy-${name}`}
+                                            title="Copy to clipboard"
+                                            style={{
+                                                background: 'rgba(255,255,255,0.05)',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                color: 'var(--velveto-text-secondary)',
+                                                padding: '0.8rem 1rem',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '0.8rem',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                                            onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                        >
+                                            COPY
+                                        </button>
+                                    )}
                                 </div>
-                                <div style={{
-                                    fontSize: '1rem',
-                                    color: 'var(--velveto-text-primary)',
-                                    fontFamily: 'monospace',
-                                    wordBreak: 'break-all',
-                                    background: 'rgba(0,0,0,0.2)',
-                                    padding: '0.5rem',
-                                    borderRadius: '4px'
-                                }}>
-                                    {value}
-                                </div>
+                                {name === 'SUPABASE_URL' && (
+                                    <span style={{ fontSize: '0.6rem', color: 'var(--velveto-text-secondary)' }}>
+                                        Системный параметр (только для чтения)
+                                    </span>
+                                )}
                             </motion.div>
                         ))}
                     </div>

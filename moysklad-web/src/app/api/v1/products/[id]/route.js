@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { validateApiKey } from '@/lib/api-auth';
 
 export async function GET(request, { params }) {
-    const authError = validateApiKey(request);
+    const authError = await validateApiKey(request);
     if (authError) return authError;
 
     const { id } = params;
@@ -25,7 +25,7 @@ export async function GET(request, { params }) {
 }
 
 export async function PATCH(request, { params }) {
-    const authError = validateApiKey(request);
+    const authError = await validateApiKey(request);
     if (authError) return authError;
 
     const { id } = params;

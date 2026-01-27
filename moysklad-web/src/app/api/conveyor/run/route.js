@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { validateApiKey } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST() {
+export async function POST(request) {
+    const authError = await validateApiKey(request);
+    if (authError) return authError;
     try {
         if (!supabase) {
             return NextResponse.json({ error: 'Supabase not configured.' }, { status: 500 });
@@ -40,7 +43,9 @@ export async function POST() {
     }
 }
 
-export async function DELETE() {
+export async function DELETE(request) {
+    const authError = await validateApiKey(request);
+    if (authError) return authError;
     // Logic to "Stop" - we can't easily kill the remote worker process for the CURRENT job,
     // but we can clear any PENDING jobs so they don't start.
     try {

@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { validateApiKey } from '@/lib/api-auth';
 
 export async function GET(request) {
-    const authError = validateApiKey(request);
+    const authError = await validateApiKey(request);
     if (authError) return authError;
 
     try {
@@ -25,7 +25,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-    const authError = validateApiKey(request);
+    const authError = await validateApiKey(request);
     if (authError) return authError;
 
     try {
@@ -67,7 +67,7 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
-    const authError = validateApiKey(request);
+    const authError = await validateApiKey(request);
     if (authError) return authError;
 
     try {

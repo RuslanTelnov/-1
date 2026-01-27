@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { execFile } from 'child_process';
 import path from 'path';
+import { validateApiKey } from '@/lib/api-auth';
 
 export async function POST(request) {
+    const authError = await validateApiKey(request);
+    if (authError) return authError;
     try {
         const body = await request.json();
         const { title, price, imageUrl } = body;

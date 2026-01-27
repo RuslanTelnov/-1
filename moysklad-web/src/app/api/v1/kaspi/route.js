@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { validateApiKey } from '@/lib/api-auth';
 
 export async function GET(request) {
-    const authError = validateApiKey(request);
+    const authError = await validateApiKey(request);
     if (authError) return authError;
 
     // Use current URL to construct the feed link
@@ -31,7 +31,7 @@ export async function GET(request) {
 
 export async function POST(request) {
     // Manually trigger Kaspi creation for a product
-    const authError = validateApiKey(request);
+    const authError = await validateApiKey(request);
     if (authError) return authError;
 
     try {
