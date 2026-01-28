@@ -6,97 +6,155 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const API_GROUPS = [
     {
-        title: 'Product Management V1',
-        description: 'High-level normalized API for dashboard and external integrations.',
+        title: 'Аутентификация',
+        description: 'Безопасность и доступ к API через ключи.',
+        endpoints: [
+            {
+                method: 'HEADER',
+                path: 'x-api-key',
+                description: 'Все запросы к специализированным эндпоинтам (V1) требуют передачи API-ключа. Ключ можно найти в настройках панели управления.',
+                example: 'x-api-key: ваш_секретный_ключ'
+            }
+        ]
+    },
+    {
+        title: 'Управление продуктами (V1)',
+        description: 'Нормализованный API для работы с базой товаров и аналитикой.',
         endpoints: [
             {
                 method: 'GET',
                 path: '/api/v1/products',
-                description: 'Search and list products from the enriched database.',
+                description: 'Поиск и получение списка товаров из обогащенной базы данных.',
                 params: [
-                    { name: 'brand', type: 'string', desc: 'Case-insensitive brand filter' },
-                    { name: 'limit', type: 'number', desc: 'Results per page (max 100)' },
-                    { name: 'offset', type: 'number', desc: 'Pagination offset' }
+                    { name: 'brand', type: 'string', desc: 'Фильтр по названию бренда (без учета регистра)', required: false },
+                    { name: 'limit', type: 'number', desc: 'Количество результатов на страницу (по умолчанию 50)', required: false },
+                    { name: 'offset', type: 'number', desc: 'Смещение для пагинации', required: false }
                 ],
-                response: '{"data": [], "pagination": {}}'
+                response: `{
+  "data": [
+    { "id": "123", "name": "Товар", "price_kzt": 5000, "brand": "Nike" }
+  ],
+  "pagination": { "total": 150, "limit": 50, "offset": 0 }
+}`
             },
             {
                 method: 'GET',
                 path: '/api/v1/products/[id]',
-                description: 'Fetch complete metadata for a single product by article.',
-                response: '{"id": "...", "name": "...", "specs": {}}'
+                description: 'Получение детальной информации о конкретном товаре по его артикулу Wildberries.',
+                params: [
+                    { name: 'id', type: 'string', desc: 'Артикул товара WB', required: true }
+                ],
+                response: `{
+  "id": "123873313",
+  "name": "Кроссовки женские",
+  "specs": { "color": "Blue", "material": "Mesh" },
+  "price_kzt": 15000
+}`
             },
             {
                 method: 'PATCH',
                 path: '/api/v1/products/[id]',
-                description: 'Update product properties (e.g. custom names or prices).',
-                payload: '{"name": "New Name", "price_kzt": 5000}',
-                response: '{"success": true}'
+                description: 'Локальное обновление данных товара в базе дашборда.',
+                params: [
+                    { name: 'id', type: 'string', desc: 'Артикул товара WB', required: true }
+                ],
+                payload: `{
+  "price_kzt": 15500,
+  "name": "Обновленное название"
+}`,
+                response: `{ "success": true, "data": { ... } }`
             }
         ]
     },
     {
-        title: 'Automation & Logistics',
-        description: 'Control the parsing conveyor and MoySklad operations.',
+        title: 'Автоматизация и Конвейер',
+        description: 'Управление очередями парсинга и процессом создания товаров.',
         endpoints: [
             {
+                method: 'GET',
+                path: '/api/v1/automation',
+                description: 'Получение текущего состояния очереди задач автоматизации.',
+                response: `{
+  "queue": [ { "id": 1, "query": "socks", "status": "pending" } ],
+  "status": "idle"
+}`
+            },
+            {
                 method: 'POST',
-                path: '/api/conveyor/run',
-                description: 'Trigger the product synchronization conveyor.',
-                payload: '{"dry_run": false}',
-                response: '{"status": "started", "job_id": "..."}'
+                path: '/api/v1/automation',
+                description: 'Запуск задач парсинга или процессов конвейера.',
+                payload: `{
+  "action": "parse",
+  "query": "search_term",
+  "mode": "search",
+  "page": 1
+}`,
+                response: `{ "success": true, "message": "Задача добавлена в очередь" }`
             },
             {
                 method: 'GET',
                 path: '/api/conveyor/status',
-                description: 'Telemetry for the background conveyor process.',
-                response: '{"active": true, "processed": 45, "errors": 0}'
+                description: 'Детальная телеметрия работающего процесса конвейера.',
+                response: `{ "active": true, "processed": 10, "current": "Article 123" }`
+            }
+        ]
+    },
+    {
+        title: 'Интеграция с Маркетплейсами',
+        description: 'Управление выгрузкой на Kaspi и Ozon.',
+        endpoints: [
+            {
+                method: 'GET',
+                path: '/api/kaspi/xml-feed',
+                description: 'Публичная ссылка на XML-фид цен и остатков для Kaspi Merchant.',
+                response: 'XML Data (Standard Kaspi Format)'
+            },
+            {
+                method: 'POST',
+                path: '/api/ozon/create-card',
+                description: 'Запрос на создание карточки товара на Ozon.',
+                payload: `{ "product": { "name": "...", "price": 1000, "article": "..." } }`,
+                response: `{ "success": true, "task_id": "..." }`
+            }
+        ]
+    },
+    {
+        title: 'Операции МойСклад',
+        description: 'Прямая интеграция с системой складского учета.',
+        endpoints: [
+            {
+                method: 'GET',
+                path: '/api/moysklad/search',
+                description: 'Поиск товара в системе МойСклад по артикулу.',
+                params: [{ name: 'article', type: 'string', desc: 'Артикул в МойСклад', required: true }],
+                response: `{ "found": true, "id": "ms-uuid", "stock": 45 }`
             },
             {
                 method: 'POST',
                 path: '/api/oprihodovanie',
-                description: 'Create a Stock Supply record in MoySklad.',
-                payload: '{"product_id": "...", "quantity": 10}',
-                response: '{"ms_id": "...", "doc_number": "001"}'
+                description: 'Создание документа «Оприходование» для пополнения стока.',
+                payload: `{ "product_id": "ms-uuid", "quantity": 10 }`,
+                response: `{ "success": true, "ms_id": "supply-uuid" }`
             }
         ]
     },
     {
-        title: 'Market Intelligence',
-        description: 'AI-driven analysis and multi-marketplace arbitrage tools.',
-        endpoints: [
-            {
-                method: 'GET',
-                path: '/api/scout',
-                description: 'Discover trending products on Wildberries.',
-                params: [{ name: 'query', type: 'string', desc: 'Niche search term' }],
-                response: '[{"id": "...", "relevance": 0.98}]'
-            },
-            {
-                method: 'GET',
-                path: '/api/arbitrage',
-                description: 'Compare multi-marketplace pricing for profit opportunities.',
-                response: '{"opportunities": [{"profit_margin": "15%"}]}'
-            }
-        ]
-    },
-    {
-        title: 'Content & AI Labs',
-        description: 'Generative tools for visual and textual optimization.',
+        title: 'ИИ Лаборатория',
+        description: 'Инструменты генерации контента через нейронные сети.',
         endpoints: [
             {
                 method: 'POST',
                 path: '/api/content/generate-text',
-                description: 'SEO-optimized product descriptions using Gemini/OpenAI.',
-                payload: '{"article": "...", "style": "aggressive"}',
-                response: '{"description": "..."}'
+                description: 'Генерация SEO-описания товара на основе промпта.',
+                payload: `{ "prompt": "Напиши описание для кроссовок", "context": "Adidas" }`,
+                response: `{ "text": "Кроссовки Adidas — это..." }`
             },
             {
                 method: 'POST',
                 path: '/api/content/generate-image',
-                description: 'AI Background removal or visual enhancement.',
-                payload: '{"image_url": "...", "upscale": true}',
-                response: '{"url": "..."}'
+                description: 'Генерация или изменение фона изображения товара.',
+                payload: `{ "image_url": "...", "prompt": "на белом фоне" }`,
+                response: `{ "url": "https://...generated.png" }`
             }
         ]
     }
@@ -110,7 +168,8 @@ export default function ApiReference() {
         ...group,
         endpoints: group.endpoints.filter(e =>
             e.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            e.description.toLowerCase().includes(searchQuery.toLowerCase())
+            e.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            group.title.toLowerCase().includes(searchQuery.toLowerCase())
         )
     })).filter(group => group.endpoints.length > 0);
 
@@ -129,90 +188,47 @@ export default function ApiReference() {
                 left: 0,
                 right: 0,
                 height: '500px',
-                background: 'radial-gradient(circle at 50% -20%, rgba(255, 179, 90, 0.15), transparent 70%)',
+                background: 'radial-gradient(circle at 50% -20%, rgba(255, 179, 90, 0.1), transparent 70%)',
                 pointerEvents: 'none',
                 zIndex: 0
             }} />
 
-            <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-                {/* Navigation Header */}
-                <nav style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '4rem',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
-                    paddingBottom: '2rem'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <Link href="/" style={{ textDecoration: 'none' }}>
-                            <h2 style={{
-                                fontSize: '1.5rem',
-                                fontWeight: '300',
-                                letterSpacing: '0.2em',
-                                color: '#fff',
-                                margin: 0
-                            }}>VELVETO <span style={{ color: '#ffb35a' }}>API</span></h2>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+                {/* Header Section */}
+                <header style={{ marginBottom: '4rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '2.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <div>
+                            <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '-0.02em', margin: 0 }}>
+                                VELVETO <span style={{ color: '#ffb35a' }}>API REFERENCE</span>
+                            </h1>
+                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem', marginTop: '0.5rem' }}>
+                                Полное руководство по интеграции внешних приложений и автоматизации.
+                            </p>
+                        </div>
+                        <Link href="/settings" style={{
+                            background: '#ffb35a',
+                            color: '#000',
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: '12px',
+                            fontWeight: '700',
+                            textDecoration: 'none',
+                            fontSize: '0.9rem',
+                            boxShadow: '0 0 20px rgba(255, 179, 90, 0.3)'
+                        }}>
+                            Информационная панель
                         </Link>
                     </div>
-                    <div style={{ display: 'flex', gap: '2rem' }}>
-                        <Link href="/" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: '0.9rem' }}>Dashboard</Link>
-                        <Link href="/settings" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: '0.9rem' }}>Settings</Link>
-                    </div>
-                </nav>
 
-                {/* Hero Section */}
-                <header style={{ marginBottom: '5rem', textAlign: 'center' }}>
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        style={{
-                            fontSize: '4.5rem',
-                            fontWeight: '700',
-                            letterSpacing: '-0.04em',
-                            marginBottom: '1rem',
-                            background: 'linear-gradient(135deg, #fff 0%, #ffb35a 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent'
-                        }}
-                    >
-                        Intelligence Infrastructure
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        style={{
-                            fontSize: '1.25rem',
-                            color: 'rgba(255,255,255,0.5)',
-                            maxWidth: '700px',
-                            margin: '0 auto',
-                            lineHeight: 1.6
-                        }}
-                    >
-                        Comprehensive API reference for multi-marketplace integration and automation control.
-                    </motion.p>
-                </header>
-
-                {/* Search & Tabs Container */}
-                <div style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    backdropFilter: 'blur(20px)',
-                    borderRadius: '24px',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    padding: '2rem',
-                    marginBottom: '4rem'
-                }}>
-                    <div style={{ marginBottom: '2.5rem' }}>
+                    <div style={{ position: 'relative' }}>
                         <input
                             type="text"
-                            placeholder="Find an endpoint (e.g. /products)..."
+                            placeholder="Поиск эндпоинта или функции..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
                                 width: '100%',
-                                background: 'rgba(0,0,0,0.3)',
-                                border: '1px solid rgba(255,179,90,0.2)',
+                                background: '#111',
+                                border: '1px solid rgba(255,255,255,0.1)',
                                 padding: '1.25rem 2rem',
                                 borderRadius: '16px',
                                 color: '#fff',
@@ -222,161 +238,196 @@ export default function ApiReference() {
                             }}
                         />
                     </div>
+                </header>
 
-                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                        {API_GROUPS.map(group => (
-                            <button
-                                key={group.title}
-                                onClick={() => setActiveTab(group.title)}
-                                style={{
-                                    padding: '0.75rem 1.5rem',
-                                    borderRadius: '12px',
-                                    border: '1px solid',
-                                    borderColor: activeTab === group.title ? '#ffb35a' : 'rgba(255,255,255,0.1)',
-                                    background: activeTab === group.title ? 'rgba(255,179,90,0.1)' : 'transparent',
-                                    color: activeTab === group.title ? '#ffb35a' : 'rgba(255,255,255,0.4)',
-                                    cursor: 'pointer',
-                                    fontSize: '0.9rem',
-                                    fontWeight: '600',
-                                    transition: 'all 0.2s'
-                                }}
-                            >
-                                {group.title}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                <div style={{ display: 'flex', gap: '3rem' }}>
+                    {/* Sticky Sidebar Navigation */}
+                    <aside style={{ width: '280px', position: 'sticky', top: '2rem', height: 'fit-content', display: searchQuery ? 'none' : 'block' }}>
+                        <div style={{ display: 'grid', gap: '0.5rem' }}>
+                            {API_GROUPS.map(group => (
+                                <button
+                                    key={group.title}
+                                    onClick={() => setActiveTab(group.title)}
+                                    style={{
+                                        textAlign: 'left',
+                                        padding: '1rem',
+                                        borderRadius: '12px',
+                                        border: 'none',
+                                        background: activeTab === group.title ? 'rgba(255,179,90,0.1)' : 'transparent',
+                                        color: activeTab === group.title ? '#ffb35a' : 'rgba(255,255,255,0.4)',
+                                        cursor: 'pointer',
+                                        fontSize: '0.95rem',
+                                        fontWeight: '600',
+                                        transition: 'all 0.2s',
+                                        borderLeft: activeTab === group.title ? '3px solid #ffb35a' : '3px solid transparent'
+                                    }}
+                                >
+                                    {group.title}
+                                </button>
+                            ))}
+                        </div>
+                    </aside>
 
-                {/* Endpoints List */}
-                <div style={{ display: 'grid', gap: '3rem' }}>
-                    {filteredGroups.filter(g => activeTab === g.title || searchQuery).map((group, gIdx) => (
-                        <motion.div
-                            key={group.title}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: gIdx * 0.1 }}
-                        >
-                            <div style={{ marginBottom: '2rem' }}>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#ffb35a', marginBottom: '0.5rem' }}>{group.title}</h2>
-                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1rem' }}>{group.description}</p>
-                            </div>
+                    {/* Content Area */}
+                    <main style={{ flex: 1 }}>
+                        <AnimatePresence mode="wait">
+                            {filteredGroups.filter(g => activeTab === g.title || searchQuery).map((group, groupIdx) => (
+                                <motion.div
+                                    key={group.title}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    style={{ marginBottom: '6rem' }}
+                                >
+                                    <div style={{ marginBottom: '3rem' }}>
+                                        <h2 style={{ fontSize: '1.8rem', fontWeight: '700', borderLeft: '4px solid #ffb35a', paddingLeft: '1.5rem', marginBottom: '1rem' }}>
+                                            {group.title}
+                                        </h2>
+                                        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1.1rem', maxWidth: '800px' }}>
+                                            {group.description}
+                                        </p>
+                                    </div>
 
-                            <div style={{ display: 'grid', gap: '1.5rem' }}>
-                                {group.endpoints.map((ep, eIdx) => (
-                                    <EndpointCard key={ep.path} endpoint={ep} />
-                                ))}
-                            </div>
-                        </motion.div>
-                    ))}
+                                    <div style={{ display: 'grid', gap: '2rem' }}>
+                                        {group.endpoints.map((ep, eIdx) => (
+                                            <EndpointDetail key={ep.path} endpoint={ep} />
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </main>
                 </div>
             </div>
 
-            <footer style={{ marginTop: '8rem', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '0.8rem' }}>
-                &copy; 2026 VELVETO TECH INFRASTRUCTURE. ALL RIGHTS RESERVED.
+            <footer style={{ marginTop: '10rem', textAlign: 'center', color: 'rgba(255,255,255,0.1)', fontSize: '0.85rem', paddingBottom: '4rem' }}>
+                &copy; 2026 VELVETO TECH INFRASTRUCTURE. ВСЕ ПРАВА ЗАЩИЩЕНЫ.
             </footer>
         </div>
     );
 }
 
-function EndpointCard({ endpoint }) {
-    const [isExpanded, setIsExpanded] = useState(false);
-
-    const getBadgeColor = (method) => {
+function EndpointDetail({ endpoint }) {
+    const getMethodStyles = (method) => {
+        const base = {
+            padding: '0.25rem 0.6rem',
+            borderRadius: '6px',
+            fontSize: '0.75rem',
+            fontWeight: '900',
+            color: '#fff'
+        };
         switch (method) {
-            case 'GET': return '#3b82f6';
-            case 'POST': return '#10b981';
-            case 'PATCH': return '#f59e0b';
-            case 'DELETE': return '#ef4444';
-            default: return '#71717a';
+            case 'GET': return { ...base, background: '#1e3a8a', color: '#bfdbfe', label: 'ПОЛУЧИТЬ' };
+            case 'POST': return { ...base, background: '#064e3b', color: '#a7f3d0', label: 'ОТПРАВИТЬ' };
+            case 'PATCH': return { ...base, background: '#78350f', color: '#fef3c7', label: 'ОБНОВИТЬ' };
+            case 'HEADER': return { ...base, background: '#3f3f46', color: '#fff', label: 'ЗАГОЛОВОК' };
+            default: return base;
         }
     };
 
+    const styles = getMethodStyles(endpoint.method);
+
     return (
-        <div
-            onClick={() => setIsExpanded(!isExpanded)}
-            style={{
-                background: 'rgba(255,255,255,0.02)',
-                borderRadius: '20px',
-                border: '1px solid rgba(255,255,255,0.05)',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                ...(isExpanded ? { borderColor: 'rgba(255,179,90,0.3)', background: 'rgba(255,255,255,0.04)' } : {})
-            }}
-        >
-            <div style={{ padding: '1.5rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-                <span style={{
-                    background: getBadgeColor(endpoint.method),
-                    color: '#fff',
-                    padding: '0.35rem 0.75rem',
-                    borderRadius: '8px',
-                    fontSize: '0.75rem',
-                    fontWeight: '800'
-                }}>{endpoint.method}</span>
-                <code style={{ fontSize: '1.1rem', color: '#fff', fontWeight: '600', flex: 1 }}>{endpoint.path}</code>
-                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>{endpoint.description}</span>
-                <span style={{ color: '#ffb35a', transition: 'transform 0.3s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+        <div style={{
+            background: 'rgba(255,255,255,0.02)',
+            borderRadius: '24px',
+            border: '1px solid rgba(255,255,255,0.05)',
+            overflow: 'hidden'
+        }}>
+            {/* Summary Bar */}
+            <div style={{
+                padding: '1.5rem 2.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1.5rem',
+                background: 'rgba(255,255,255,0.01)',
+                borderBottom: '1px solid rgba(255,255,255,0.05)'
+            }}>
+                <span style={styles}>{styles.label || endpoint.method}</span>
+                <code style={{ fontSize: '1.1rem', color: '#fff', fontWeight: '700', letterSpacing: '0.02em' }}>{endpoint.path}</code>
             </div>
 
-            <AnimatePresence>
-                {isExpanded && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '2rem' }}
-                    >
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
-                            {endpoint.params && (
-                                <div style={{ flex: 1 }}>
-                                    <h4 style={{ color: '#ffb35a', fontSize: '0.9rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Parameters</h4>
-                                    <div style={{ display: 'grid', gap: '1rem' }}>
-                                        {endpoint.params.map(p => (
-                                            <div key={p.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                    <span style={{ color: '#fff', fontWeight: '600' }}>{p.name}</span>
-                                                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}>({p.type})</span>
-                                                </div>
-                                                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>{p.desc}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+            {/* Content Body */}
+            <div style={{ padding: '2.5rem' }}>
+                <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: '2.5rem' }}>
+                    {endpoint.description}
+                </p>
 
-                            {endpoint.payload && (
-                                <div style={{ flex: 1 }}>
-                                    <h4 style={{ color: '#10b981', fontSize: '0.9rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Example Body</h4>
-                                    <pre style={{
-                                        background: '#0a0a0a',
-                                        padding: '1.5rem',
-                                        borderRadius: '12px',
-                                        border: '1px solid rgba(16, 185, 129, 0.2)',
-                                        color: '#10b981',
-                                        fontSize: '0.85rem',
-                                        margin: 0
-                                    }}>{endpoint.payload}</pre>
-                                </div>
-                            )}
-
-                            {endpoint.response && (
-                                <div style={{ flex: 1 }}>
-                                    <h4 style={{ color: '#3b82f6', fontSize: '0.9rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Example Response</h4>
-                                    <pre style={{
-                                        background: '#0a0a0a',
-                                        padding: '1.5rem',
-                                        borderRadius: '12px',
-                                        border: '1px solid rgba(59, 130, 246, 0.2)',
-                                        color: '#3b82f6',
-                                        fontSize: '0.85rem',
-                                        margin: 0
-                                    }}>{endpoint.response}</pre>
-                                </div>
-                            )}
+                {endpoint.params && (
+                    <div style={{ marginBottom: '3rem' }}>
+                        <h4 style={{ fontSize: '0.85rem', color: '#ffb35a', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1.5rem', fontWeight: '800' }}>
+                            Параметры запроса
+                        </h4>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <th style={{ padding: '1rem 0', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>ИМЯ</th>
+                                        <th style={{ padding: '1rem 0', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>ТИП</th>
+                                        <th style={{ padding: '1rem 0', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>ОПИСАНИЕ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {endpoint.params.map(p => (
+                                        <tr key={p.name} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <td style={{ padding: '1.25rem 0', color: '#3b82f6', fontWeight: '700', fontSize: '0.95rem' }}>
+                                                {p.name}
+                                                {p.required && <span style={{ color: '#ef4444', marginLeft: '4px' }}>*</span>}
+                                            </td>
+                                            <td style={{ padding: '1.25rem 0', color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>{p.type}</td>
+                                            <td style={{ padding: '1.25rem 0', color: 'rgba(255,255,255,0.8)', fontSize: '0.95rem' }}>{p.desc}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                    </motion.div>
+                    </div>
                 )}
-            </AnimatePresence>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+                    {(endpoint.payload || endpoint.example) && (
+                        <div>
+                            <h4 style={{ fontSize: '0.85rem', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1rem', fontWeight: '800' }}>
+                                ТЕЛО ЗАПРОСА / ПРИМЕР
+                            </h4>
+                            <pre style={{
+                                background: '#000',
+                                padding: '1.5rem',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(16, 185, 129, 0.2)',
+                                color: '#10b981',
+                                fontSize: '0.9rem',
+                                overflowX: 'auto',
+                                margin: 0,
+                                lineHeight: 1.5
+                            }}>
+                                {endpoint.payload || endpoint.example}
+                            </pre>
+                        </div>
+                    )}
+
+                    {endpoint.response && (
+                        <div>
+                            <h4 style={{ fontSize: '0.85rem', color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1rem', fontWeight: '800' }}>
+                                ПРИМЕР ОТВЕТА
+                            </h4>
+                            <pre style={{
+                                background: '#000',
+                                padding: '1.5rem',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(59, 130, 246, 0.2)',
+                                color: '#3b82f6',
+                                fontSize: '0.9rem',
+                                overflowX: 'auto',
+                                margin: 0,
+                                lineHeight: 1.5
+                            }}>
+                                {endpoint.response}
+                            </pre>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
