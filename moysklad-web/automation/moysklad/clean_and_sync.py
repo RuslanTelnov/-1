@@ -23,7 +23,7 @@ def clean_and_sync():
         # Or just use a broad filter.
         
         # Fetch all IDs first
-        res = supabase.table("products").select("id").execute()
+        res = supabase.schema('Parser').table('products').select("id").execute()
         all_ids = [item['id'] for item in res.data]
         print(f"   Found {len(all_ids)} products. Resetting stocks...")
         
@@ -35,7 +35,7 @@ def clean_and_sync():
         chunk_size = 1000
         for i in range(0, len(all_ids), chunk_size):
             chunk = all_ids[i:i+chunk_size]
-            supabase.table("products").update({"stock": 0}).in_("id", chunk).execute()
+            supabase.schema('Parser').table('products').update({"stock": 0}).in_("id", chunk).execute()
             print(f"   Reset chunk {i}-{i+len(chunk)}")
             
     except Exception as e:
@@ -50,7 +50,7 @@ def clean_and_sync():
     # print("\n3️⃣  Deleting products with stock 0...")
     # try:
     #     # Delete where stock is 0
-    #     res = supabase.table("products").delete().eq("stock", 0).execute()
+    #     res = supabase.schema('Parser').table('products').delete().eq("stock", 0).execute()
     #     print(f"✅ Deleted {len(res.data)} products with 0 stock.")
     # except Exception as e:
     #     print(f"❌ Error deleting products: {e}")

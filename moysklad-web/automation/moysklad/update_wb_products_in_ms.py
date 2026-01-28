@@ -114,7 +114,7 @@ def main():
         return
 
     # 2. Fetch WB Products
-    response = supabase.table("wb_top_products").select("*").execute()
+    response = supabase.schema('Parser').table('wb_top_products').select("*").execute()
     products = response.data
     print(f"Found {len(products)} products to update.")
     

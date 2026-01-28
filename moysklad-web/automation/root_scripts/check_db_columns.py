@@ -19,7 +19,7 @@ def check_columns():
     # We can't directly get columns via SDK easily without psql, 
     # but we can try to fetch one row and see the keys.
     try:
-        res = supabase.table("wb_search_results").select("*").limit(1).execute()
+        res = supabase.schema('Parser').table('wb_search_results').select("*").limit(1).execute()
         if res.data:
             print("Columns in wb_search_results:")
             for key in res.data[0].keys():

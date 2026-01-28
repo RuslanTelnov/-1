@@ -103,7 +103,7 @@ def import_samsung_lg():
                             "url": f"https://www.wildberries.ru/catalog/{wb_id}/detail.aspx"
                         }
                         
-                        supabase.table("wb_top_products").upsert(data).execute()
+                        supabase.schema('Parser').table('wb_top_products').upsert(data).execute()
                         print(f"   💾 Saved {wb_id}: {name} - {price}")
                         count += 1
                     except Exception as e:

@@ -134,7 +134,7 @@ def create_from_ms(article):
         supabase = init_supabase()
         
         # Fetch product from 'products' table
-        response = supabase.table("products").select("*").eq("article", article).execute()
+        response = supabase.schema('Parser').table('products').select("*").eq("article", article).execute()
         
         product = None
         if response.data:
@@ -144,7 +144,7 @@ def create_from_ms(article):
             print(f"❌ Product with article {article} not found in Supabase 'products' table.")
             # Fallback for sync delays - check wb_search_results (raw parse)
             print("   Checking wb_search_results as fallback...")
-            response2 = supabase.table("wb_search_results").select("*").eq("id", int(article)).execute()
+            response2 = supabase.schema('Parser').table('wb_search_results').select("*").eq("id", int(article)).execute()
             if response2.data:
                 product = response2.data[0]
                 print(f"   Found in wb_search_results: {product.get('name')}")
@@ -182,7 +182,7 @@ def create_from_ms(article):
             # Update status in Supabase so it shows in dashboard
             try:
                 # 1. Fetch current specs
-                current_data = supabase.table("wb_search_results").select("specs").eq("id", int(article)).execute()
+                current_data = supabase.schema('Parser').table('wb_search_results').select("specs").eq("id", int(article)).execute()
                 specs = {}
                 if current_data.data and current_data.data[0].get("specs"):
                     specs = current_data.data[0]["specs"]
@@ -199,7 +199,7 @@ def create_from_ms(article):
                     "specs": specs
                 }
                 
-                supabase.table("wb_search_results").update(update_data).eq("id", int(article)).execute()
+                supabase.schema('Parser').table('wb_search_results').update(update_data).eq("id", int(article)).execute()
                 print(f"🔄 Updated kaspi_created and specs in wb_search_results: ID={upload_id}")
             except Exception as e:
                 print(f"⚠️  Failed to update status in Supabase: {e}")

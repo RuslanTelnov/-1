@@ -16,7 +16,7 @@ print(f"🔍 Inspecting article: {article}")
 
 try:
     # Check specific product
-    response = supabase.table("products").select("*").eq("article", article).execute()
+    response = supabase.schema('Parser').table('products').select("*").eq("article", article).execute()
     
     if response.data:
         product = response.data[0]
@@ -28,7 +28,7 @@ try:
         print("❌ Product NOT found with exact match.")
         
         # Try finding it by iterating (in case of type mismatch in query)
-        all_products = supabase.table("products").select("*").execute()
+        all_products = supabase.schema('Parser').table('products').select("*").execute()
         found = False
         for p in all_products.data:
             if str(p.get('article')) == article:

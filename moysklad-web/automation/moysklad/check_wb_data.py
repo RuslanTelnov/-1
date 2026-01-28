@@ -9,7 +9,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-response = supabase.table("wb_top_products").select("*").limit(5).execute()
+response = supabase.schema('Parser').table('wb_top_products').select("*").limit(5).execute()
 
 print(f"Found {len(response.data)} products in wb_top_products:")
 for p in response.data:

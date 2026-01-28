@@ -15,7 +15,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 try:
     # Fetch one row to see keys
-    response = supabase.table("wb_top_products").select("*").limit(1).execute()
+    response = supabase.schema('Parser').table('wb_top_products').select("*").limit(1).execute()
     if response.data:
         print("Columns found:", response.data[0].keys())
     else:

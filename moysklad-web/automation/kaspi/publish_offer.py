@@ -28,7 +28,7 @@ def get_price_from_ms(sku):
     
     try:
         # Assuming 'article' column holds the SKU
-        response = supabase.table("products").select("price").eq("article", sku).execute()
+        response = supabase.schema('Parser').table('products').select("price").eq("article", sku).execute()
         if response.data:
             # Price is stored in cents/kopecks, convert to main unit
             raw_price = response.data[0].get("price", 0)

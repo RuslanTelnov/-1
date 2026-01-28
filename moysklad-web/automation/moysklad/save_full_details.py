@@ -119,7 +119,7 @@ full_data = [
 print(f"Upserting {len(full_data)} products with full details...")
 
 try:
-    data = supabase.table("wb_top_products").upsert(full_data).execute()
+    data = supabase.schema('Parser').table('wb_top_products').upsert(full_data).execute()
     print("Success!")
 except Exception as e:
     print(f"Error saving to Supabase: {e}")

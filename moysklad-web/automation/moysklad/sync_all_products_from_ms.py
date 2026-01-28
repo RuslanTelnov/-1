@@ -130,7 +130,7 @@ def sync_products():
             # Check if exists to decide on stock?
             # Just upserting fields we know.
             
-            supabase.table("products").upsert(db_data, on_conflict="article").execute()
+            supabase.schema('Parser').table('products').upsert(db_data, on_conflict="article").execute()
             count += 1
             if count % 50 == 0:
                 print(f"   Processed {count} products...")

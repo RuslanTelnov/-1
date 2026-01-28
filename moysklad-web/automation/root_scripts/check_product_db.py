@@ -19,7 +19,7 @@ article = sys.argv[1] if len(sys.argv) > 1 else "123873313"
 print(f"🔍 Searching for article: {article}")
 
 try:
-    response = supabase.table("products").select("*").eq("article", article).execute()
+    response = supabase.schema('Parser').table('products').select("*").eq("article", article).execute()
     
     if response.data:
         print(f"✅ Found {len(response.data)} product(s):")

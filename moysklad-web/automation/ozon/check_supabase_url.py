@@ -12,7 +12,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 name = "Дорожный горшок Becute, розовый"
 print(f"Checking image_url for: {name}")
 
-response = supabase.table("products").select("id, name, image_url").eq("name", name).execute()
+response = supabase.schema('Parser').table('products').select("id, name, image_url").eq("name", name).execute()
 
 for product in response.data:
     print(f"ID: {product['id']}")

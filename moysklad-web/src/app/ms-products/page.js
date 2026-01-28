@@ -31,7 +31,7 @@ export default function MsProducts() {
                 'postgres_changes',
                 {
                     event: '*',
-                    schema: 'public',
+                    schema: 'Parser',
                     table: 'products'
                 },
                 (payload) => {

@@ -71,7 +71,7 @@ def update_status(wb_id, status_dict):
         # Append log if possible? Supabase replace is easier.
         status_dict['conveyor_log'] = msg # Simplification
         
-        supabase.table("wb_search_results").update(status_dict).eq("id", wb_id).execute()
+        supabase.schema('Parser').table('wb_search_results').update(status_dict).eq("id", wb_id).execute()
     except Exception as e:
         logger.error(f"Failed to update DB status for {wb_id}: {e}")
 
@@ -112,7 +112,7 @@ def run_conveyor(single_pass=False, skip_parser=False):
             # 1. PROCESS CANDIDATES (Conveyor) - PRIORITY
             # -------------------------------------------------------------
             # Fetch last 50 items to check status
-            response = supabase.table("wb_search_results") \
+            response = supabase.schema('Parser').table('wb_search_results') \
                 .select("*") \
                 .neq("conveyor_status", "done") \
                 .order("ms_created", desc=False) \
@@ -235,7 +235,7 @@ def run_conveyor(single_pass=False, skip_parser=False):
             if parse_and_save:
                 try:
                     # Check for queued jobs first
-                    job_response = supabase.table("parser_queue") \
+                    job_response = supabase.schema('Parser').table('parser_queue') \
                         .select("*") \
                         .eq("status", "pending") \
                         .order("created_at", desc=False) \
@@ -246,15 +246,15 @@ def run_conveyor(single_pass=False, skip_parser=False):
                     
                     if job:
                         logger.info(f"🚀 Processing Queue Job: {job['query']} (Mode: {job['mode']}, Page: {job['page']})")
-                        supabase.table("parser_queue").update({"status": "processing"}).eq("id", job['id']).execute()
+                        supabase.schema('Parser').table('parser_queue').update({"status": "processing"}).eq("id", job['id']).execute()
                         
                         try:
                             # Run the parser for this job
                             parse_and_save(job['query'], limit=100, page=job['page'])
-                            supabase.table("parser_queue").update({"status": "done"}).eq("id", job['id']).execute()
+                            supabase.schema('Parser').table('parser_queue').update({"status": "done"}).eq("id", job['id']).execute()
                         except Exception as e:
                             logger.error(f"Job failed: {e}")
-                            supabase.table("parser_queue").update({"status": "error", "log": str(e)}).eq("id", job['id']).execute()
+                            supabase.schema('Parser').table('parser_queue').update({"status": "error", "log": str(e)}).eq("id", job['id']).execute()
                             
                     else:
                         # --- AUTOPILOT MODE (Expanded Keyword Rotation) ---

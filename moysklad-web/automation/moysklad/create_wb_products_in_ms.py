@@ -249,7 +249,7 @@ def create_product_in_ms(product, folder_meta, price_type_meta, extra_attributes
             # Only add image_url if provided (avoiding undefined errors)
             if product.get('image_url'):
                 db_data["image_url"] = product.get('image_url')
-            supabase.table("products").upsert(db_data, on_conflict="article").execute()
+            supabase.schema('Parser').table('products').upsert(db_data, on_conflict="article").execute()
             print(f"   💾 Synced to Supabase Dashboard: {name} - {price} ₸")
         except Exception as e:
             print(f"   ❌ Error syncing to Supabase: {e}")
@@ -275,7 +275,7 @@ def main():
         return
 
     # 3. Fetch WB Products
-    response = supabase.table("wb_top_products").select("*").execute()
+    response = supabase.schema('Parser').table('wb_top_products').select("*").execute()
     products = response.data
     print(f"Found {len(products)} products to export.")
     

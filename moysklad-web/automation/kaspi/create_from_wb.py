@@ -122,7 +122,7 @@ def create_from_wb(article_input):
         # 1. Try 'wb_search_results' (Primary Source)
         # Note: wb_search_results uses 'id' as integer (NM ID)
         try:
-            resp2 = supabase.table("wb_search_results").select("*").eq("id", int(article_id)).execute()
+            resp2 = supabase.schema('Parser').table('wb_search_results').select("*").eq("id", int(article_id)).execute()
             if resp2.data:
                 wb_product = resp2.data[0]
                 print(f"📦 Found in 'wb_search_results': {wb_product.get('name')}")
@@ -152,22 +152,26 @@ def create_from_wb(article_input):
                 
         # Upsert into wb_search_results (ensures it exists for future use)
         try:
-            upsert_data = {
-                "id": int(article_id),
+            # Prepare update data
+            update_data = {
                 "name": wb_product.get("name"),
                 "price_kzt": wb_product.get("price_kzt", 0),
                 "image_url": wb_product.get("image_url"),
                 "brand": wb_product.get("brand"),
                 "updated_at": "now()"
             }
-            # Only add specs if they are interesting
+            
+            # Merge specs if they exist to avoid wiping MS/Kaspi IDs
+            current_specs = wb_product.get("specs") or {}
             if wb_product.get("wb_full_data"):
-                 upsert_data["specs"] = {"enriched": True}
-                 
-            supabase.table("wb_search_results").upsert(upsert_data).execute()
-            print(f"💾 Upserted product {article_id} to wb_search_results.")
+                current_specs["enriched"] = True
+                update_data["specs"] = current_specs
+
+            # Try to update first
+            supabase.schema('Parser').table('wb_search_results').update(update_data).eq("id", int(article_id)).execute()
+            print(f"💾 Updated product {article_id} in wb_search_results.")
         except Exception as e:
-            print(f"⚠️  Failed to upsert product: {e}")
+            print(f"⚠️  Failed to update/upsert product info: {e}")
         
         # Map data
         kaspi_data = map_wb_to_kaspi(wb_product)
@@ -181,7 +185,7 @@ def create_from_wb(article_input):
         
         # Check 'products' table for the code (synced from MS)
         try:
-             res_ms = supabase.table("products").select("code", "id").eq("article", str(article_id)).execute()
+             res_ms = supabase.schema('Parser').table('products').select("code", "id").eq("article", str(article_id)).execute()
              if res_ms.data and res_ms.data[0].get("code"):
                   sku = res_ms.data[0]["code"]
                   print(f"🔗 Found MoySklad Code in DB: {sku}")
@@ -290,7 +294,7 @@ def create_from_wb(article_input):
                 # Since we cannot modify schema to add columns, we store metadata in 'specs' jsonb
                 
                 # 1. Fetch current specs
-                current_data = supabase.table("wb_search_results").select("specs").eq("id", int(article_id)).execute()
+                current_data = supabase.schema('Parser').table('wb_search_results').select("specs").eq("id", int(article_id)).execute()
                 specs = {}
                 if current_data.data and current_data.data[0].get("specs"):
                     specs = current_data.data[0]["specs"]
@@ -312,7 +316,7 @@ def create_from_wb(article_input):
                      specs["kaspi_attributes"] = kaspi_data["attributes"]
                      update_data["specs"] = specs
                 
-                supabase.table("wb_search_results").update(update_data).eq("id", int(article_id)).execute()
+                supabase.schema('Parser').table('wb_search_results').update(update_data).eq("id", int(article_id)).execute()
                 print(f"🔄 Updated DB status in wb_search_results (specs): ID={upload_id}")
             except Exception as e:
                 print(f"⚠️  Failed to update status in Supabase: {e}")

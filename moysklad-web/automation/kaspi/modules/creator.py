@@ -60,9 +60,29 @@ def prepare_card_payload(scraped_data, sku, custom_barcode_prefix="200"):
             "value": value
         })
 
+    # ADD BARCODE AS ATTRIBUTE
+    # Try to find the correct 'Vendor code' or 'Barcode' attribute based on category
+    category_name = scraped_data.get("category_name", "")
+    if category_name.startswith("Master - "):
+        prefix = category_name.replace("Master - ", "")
+        barcode_attr = f"{prefix}*Vendor code"
+        attributes_list.append({
+            "code": barcode_attr,
+            "value": barcode
+        })
+    # Fallback to generic if not Master
+    else:
+        attributes_list.append({
+            "code": "Barcode",
+            "value": barcode
+        })
+
+    # TITLE SHOULD REMAIN ORIGINAL AS PER USER REQUEST
+    original_title = scraped_data.get("title", "")
+    
     payload = {
         "sku": str(sku)[:64],
-        "title": scraped_data.get("title", "")[:1000], # Max 1024
+        "title": original_title[:1000],
         "description": scraped_data.get("description", "")[:1000] if scraped_data.get("description") else "",
         "brand": scraped_data.get("brand", "Generic")[:250], # Max 256
         "category": scraped_data.get("category_name"), # This should be "Master - ..."

@@ -15,7 +15,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 try:
     # Try to select from the table
-    response = supabase.table("wb_search_results").select("id").limit(1).execute()
+    response = supabase.schema('Parser').table('wb_search_results').select("id").limit(1).execute()
     print("✅ Table 'wb_search_results' exists and is accessible.")
 except Exception as e:
     print(f"❌ Error accessing table: {e}")

@@ -11,5 +11,9 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 export const supabase = (supabaseUrl && supabaseKey)
-    ? createClient(supabaseUrl, supabaseKey)
+    ? createClient(supabaseUrl, supabaseKey, {
+        db: {
+            schema: process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || process.env.SUPABASE_SCHEMA || 'Parser'
+        }
+    })
     : null;

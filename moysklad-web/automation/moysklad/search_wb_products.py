@@ -112,7 +112,7 @@ def search_and_extract_details():
                     }
                     
                     # Upsert
-                    supabase.table("wb_top_products").upsert(data).execute()
+                    supabase.schema('Parser').table('wb_top_products').upsert(data).execute()
                     print(f"   💾 Saved {wb_id}: {name} - {price}")
                     count += 1
                 except Exception as e:

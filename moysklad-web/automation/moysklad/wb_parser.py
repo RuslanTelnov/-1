@@ -51,7 +51,7 @@ def find_basket_host(nm_id):
 def fetch_wb_data():
     # Fetch product IDs from Supabase
     try:
-        response = supabase.table("wb_top_products").select("id").execute()
+        response = supabase.schema('Parser').table('wb_top_products').select("id").execute()
         product_ids = [item['id'] for item in response.data]
         print(f"Fetched {len(product_ids)} products from database: {product_ids}")
     except Exception as e:
@@ -145,7 +145,7 @@ def fetch_wb_data():
             
             # Update Supabase
             try:
-                supabase.table("wb_top_products").upsert(product_data).execute()
+                supabase.schema('Parser').table('wb_top_products').upsert(product_data).execute()
                 print(f"Updated DB for {nm_id}")
             except Exception as e:
                 print(f"DB Update Error: {e}")

@@ -174,7 +174,7 @@ def save_to_supabase(product_data, moysklad_id, image_url=None, supplier=None, c
     }
     
     try:
-        supabase.table("products").upsert(db_data, on_conflict="article").execute()
+        supabase.schema('Parser').table('products').upsert(db_data, on_conflict="article").execute()
         print("   💾 Сохранено в Supabase")
     except Exception as e:
         print(f"   ⚠️  Ошибка сохранения в Supabase: {e}")

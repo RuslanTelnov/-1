@@ -383,7 +383,7 @@ def parse_and_save(query, limit=50, page=1):
         
         if supabase:
             try:
-                supabase.table("wb_search_results").upsert(item).execute()
+                supabase.schema('Parser').table('wb_search_results').upsert(item).execute()
                 print(f"  Saved {name} ({price_kzt} ₸)")
             except Exception as e:
                 print(f"  Error saving DB: {e}")
@@ -397,7 +397,7 @@ def reparse_existing():
     if not supabase: return
     print("🔄 Starting reparse...")
     try:
-        res = supabase.table("wb_search_results").select("id, query").execute()
+        res = supabase.schema('Parser').table('wb_search_results').select("id, query").execute()
         if not res.data: return
         print(f"Updating {len(res.data)} products...")
         
@@ -449,7 +449,7 @@ def reparse_existing():
                 update_data["specs"]["image_urls"] = image_urls
 
             try:
-                supabase.table("wb_search_results").update(update_data).eq("id", nm_id).execute()
+                supabase.schema('Parser').table('wb_search_results').update(update_data).eq("id", nm_id).execute()
                 print(f"  ✅ Updated {name}")
             except Exception as e:
                 print(f"  ❌ Error: {e}")

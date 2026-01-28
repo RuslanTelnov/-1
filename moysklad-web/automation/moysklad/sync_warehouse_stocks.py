@@ -71,14 +71,14 @@ def sync_warehouses(warehouses):
                 "name": w['name']
             }
             # Upsert warehouse
-            res = supabase.table("warehouses").upsert(data, on_conflict="moysklad_id").execute()
+            res = supabase.schema('Parser').table('warehouses').upsert(data, on_conflict="moysklad_id").execute()
             # print(f"   Saved {w['name']}")
         except Exception as e:
             print(f"❌ Error saving warehouse {w['name']}: {e}")
 
 def get_db_warehouse_map():
     # Helper to map MS ID to DB UUID
-    res = supabase.table("warehouses").select("id, moysklad_id").execute()
+    res = supabase.schema('Parser').table('warehouses').select("id, moysklad_id").execute()
     mapping = {}
     for w in res.data:
         mapping[w['moysklad_id']] = w['id']
@@ -97,7 +97,7 @@ def get_db_product_map():
     offset = 0
     limit = 1000
     while True:
-        res = supabase.table("products").select("id, article, moysklad_id").range(offset, offset+limit-1).execute()
+        res = supabase.schema('Parser').table('products').select("id, article, moysklad_id").range(offset, offset+limit-1).execute()
         if not res.data:
             break
         for p in res.data:
@@ -203,7 +203,7 @@ def sync_all():
             if len(upsert_list) >= 1000:
                 # Flush
                 try:
-                    supabase.table("product_stocks").upsert(upsert_list, on_conflict="product_id,warehouse_id").execute()
+                    supabase.schema('Parser').table('product_stocks').upsert(upsert_list, on_conflict="product_id,warehouse_id").execute()
                     # print(f"   Flushed {len(upsert_list)} stocks.")
                     upsert_list = []
                 except Exception as e:
@@ -213,7 +213,7 @@ def sync_all():
         # Final flush
         if upsert_list:
             try:
-                supabase.table("product_stocks").upsert(upsert_list, on_conflict="product_id,warehouse_id").execute()
+                supabase.schema('Parser').table('product_stocks').upsert(upsert_list, on_conflict="product_id,warehouse_id").execute()
                 print(f"   ✅ Updated stocks for {len(upsert_list)} items (final batch).")
             except Exception as e:
                 print(f"❌ Error flushing final stocks for {name}: {e}")

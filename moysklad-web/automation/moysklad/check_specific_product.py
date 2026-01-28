@@ -18,7 +18,7 @@ def check_product():
     nm_id = 124019598
     
     try:
-        response = supabase.table("wb_top_products").select("*").eq("id", nm_id).execute()
+        response = supabase.schema('Parser').table('wb_top_products').select("*").eq("id", nm_id).execute()
         if response.data:
             print(json.dumps(response.data[0], indent=2, ensure_ascii=False))
         else:

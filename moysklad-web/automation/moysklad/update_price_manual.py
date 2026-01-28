@@ -28,7 +28,7 @@ def update_price():
     
     print(f"Updating {nm_id} with price {price} KZT...")
     try:
-        supabase.table("wb_top_products").upsert(data).execute()
+        supabase.schema('Parser').table('wb_top_products').upsert(data).execute()
         print("Success!")
     except Exception as e:
         print(f"Error: {e}")

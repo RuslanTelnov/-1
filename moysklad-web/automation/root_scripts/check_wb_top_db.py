@@ -15,7 +15,7 @@ print(f"🔍 Searching for article {article} in wb_top_products...")
 
 try:
     # Try searching by id (which seems to be the article/nm_id based on page.js: Art: {product.id})
-    response = supabase.table("wb_top_products").select("*").eq("id", int(article)).execute()
+    response = supabase.schema('Parser').table('wb_top_products').select("*").eq("id", int(article)).execute()
     
     if response.data:
         print(f"✅ Found in wb_top_products: {len(response.data)}")

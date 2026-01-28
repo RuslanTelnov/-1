@@ -70,9 +70,9 @@ print(f"Saving {len(products)} products to Supabase...")
 
 try:
     # Clear existing data first to show only these new ones
-    supabase.table("wb_top_products").delete().neq("id", 0).execute()
+    supabase.schema('Parser').table('wb_top_products').delete().neq("id", 0).execute()
     
-    data = supabase.table("wb_top_products").upsert(products).execute()
+    data = supabase.schema('Parser').table('wb_top_products').upsert(products).execute()
     print("Success!")
 except Exception as e:
     print(f"Error saving to Supabase: {e}")

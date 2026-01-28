@@ -38,7 +38,7 @@ def main():
     print("🚀 Starting MoySklad Data Sync (Prices & Images)...")
     
     # Fetch products from Supabase that have a moysklad_id
-    response = supabase.table("products").select("id, name, moysklad_id").not_.is_("moysklad_id", "null").execute()
+    response = supabase.schema('Parser').table('products').select("id, name, moysklad_id").not_.is_("moysklad_id", "null").execute()
     
     products = response.data
     print(f"Found {len(products)} products to check.")
@@ -74,7 +74,7 @@ def main():
 
             if updates:
                 try:
-                    supabase.table("products").update(updates).eq("id", p['id']).execute()
+                    supabase.schema('Parser').table('products').update(updates).eq("id", p['id']).execute()
                     print(f"✅ Updated {p['name']}: Min={min_price/100}, Cost={cost_price/100}, Sale={sale_price/100}")
                     updated_count += 1
                 except Exception as e:

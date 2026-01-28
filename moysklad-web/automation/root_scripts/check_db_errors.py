@@ -14,7 +14,7 @@ if not url:
 
 supabase = create_client(url, key)
 
-response = supabase.table("wb_search_results").select("id, name, conveyor_status, conveyor_log").eq("conveyor_status", "error").limit(5).execute()
+response = supabase.schema('Parser').table('wb_search_results').select("id, name, conveyor_status, conveyor_log").eq("conveyor_status", "error").limit(5).execute()
 
 for row in response.data:
     print(f"ID: {row['id']} | Status: {row['conveyor_status']} | Log: {row['conveyor_log']}")

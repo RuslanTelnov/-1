@@ -25,7 +25,7 @@ dummy_product = {
 }
 
 try:
-    supabase.table("wb_search_results").upsert(dummy_product).execute()
+    supabase.schema('Parser').table('wb_search_results').upsert(dummy_product).execute()
     print("Dummy product inserted successfully.")
 except Exception as e:
     print(f"Error inserting dummy product: {e}")

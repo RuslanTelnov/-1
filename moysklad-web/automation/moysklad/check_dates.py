@@ -9,7 +9,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def check_dates():
-    res = supabase.table("products").select("name, created_at").order("created_at", desc=True).limit(10).execute()
+    res = supabase.schema('Parser').table('products').select("name, created_at").order("created_at", desc=True).limit(10).execute()
     for p in res.data:
         print(f"{p['created_at']} - {p['name']}")
 

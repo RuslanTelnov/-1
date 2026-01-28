@@ -15,7 +15,7 @@ wb_ids_str = [str(id) for id in wb_ids]
 
 print(f"Checking for WB IDs: {wb_ids_str}")
 
-response = supabase.table("products").select("id, name, article").in_("article", wb_ids_str).execute()
+response = supabase.schema('Parser').table('products').select("id, name, article").in_("article", wb_ids_str).execute()
 
 print(f"Found {len(response.data)} matches in MS products table:")
 for p in response.data:

@@ -49,11 +49,11 @@ def generate_xml():
     # 3. Fetch Local Products
     print("🔍 Fetching local products from Supabase...")
     # Fetch mapping for MoySklad codes
-    ms_res = supabase.table('products').select('article, code').execute()
+    ms_res = supabase.schema('Parser').table('products').select('article, code').execute()
     code_map = {str(p['article']): p['code'] for p in ms_res.data if p['article'] and p['code']}
     
     # Fetch our newly created products
-    local_res = supabase.table('wb_search_results').select('*').eq('kaspi_created', True).execute()
+    local_res = supabase.schema('Parser').table('wb_search_results').select('*').eq('kaspi_created', True).execute()
     local_products = local_res.data
     print(f"📦 Found {len(local_products)} local products marked as created on Kaspi.")
     if local_products:

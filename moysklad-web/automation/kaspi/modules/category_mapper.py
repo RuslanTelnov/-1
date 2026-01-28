@@ -135,6 +135,15 @@ class KaspiCategoryMapper:
         'коляска для кукол': ('Master - Accessories for dolls', 'doll_accessories'),
         'коляск': ('Master - Buggies', 'strollers'),
         
+        # Shoes (Added to avoid 'носки' conflict)
+        'обувь': ('Master - Men shoes', 'shoes'),
+        'кроссовк': ('Master - Men shoes', 'shoes'),
+        'кеды': ('Master - Men shoes', 'shoes'),
+        'сандал': ('Master - Men shoes', 'shoes'),
+        'ботинок': ('Master - Men shoes', 'shoes'),
+        'ботинки': ('Master - Men shoes', 'shoes'),
+        'сапог': ('Master - Men shoes', 'shoes'),
+        
         # Plasticine / Modeling
         'пластилин': ('Master - Artistic dough', 'modeling'),
         'лепка': ('Master - Artistic dough', 'modeling'),
@@ -155,8 +164,15 @@ class KaspiCategoryMapper:
 
         # 1. Manual keyword mapping (fast pass)
         print(f"DEBUG: Checking '{text}' against map...", file=sys.stderr)
-        for keyword, (cat_name, cat_type) in cls.CATEGORY_MAP.items():
-            if keyword in text:
+        # Sort keys by length descending to match longer phrases first (e.g. 'коляска для кукол' before 'коляска')
+        sorted_keywords = sorted(cls.CATEGORY_MAP.keys(), key=len, reverse=True)
+        
+        for keyword in sorted_keywords:
+            cat_name, cat_type = cls.CATEGORY_MAP[keyword]
+            # Use regex to match keyword at word start or as whole word stem
+            # This helps avoid matching 'носк' in 'износостойкость'
+            pattern = rf"\b{re.escape(keyword)}"
+            if re.search(pattern, text):
                 print(f"DEBUG: Found match '{keyword}' -> {cat_name}", file=sys.stderr)
                 return cat_name, cat_type
         
@@ -199,6 +215,11 @@ class KaspiCategoryMapper:
                 ai_code, ai_title = detect_category_ai(name, description, potential_cats)
                 if ai_code:
                     return ai_code, "universal"
+                elif potential_cats:
+                    # Fallback to the best fuzzy match
+                    best_cat = potential_cats[0]
+                    print(f"⚠️ AI detection failed, falling back to top fuzzy match: {best_cat['title']} ({best_cat['code']})", file=sys.stderr)
+                    return best_cat['code'], "universal_fuzzy"
         except Exception as e:
             print(f"⚠️ Universal detection failed: {e}", file=sys.stderr)
 
@@ -523,8 +544,21 @@ class KaspiCategoryMapper:
                     if not mandatory_attrs:
                          return {}
                          
+                    # Fetch possible values for enums to help AI choose
+                    for attr in mandatory_attrs:
+                        if attr.get('type') == 'enum':
+                            try:
+                                print(f"🔍 Fetching values for enum: {attr['code']}", file=sys.stderr)
+                                v_url = f"https://kaspi.kz/shop/api/products/classification/attribute/values?c={category_code}&a={attr['code']}"
+                                v_resp = requests.get(v_url, headers=headers, timeout=10)
+                                if v_resp.status_code == 200:
+                                    attr['values'] = v_resp.json()
+                            except Exception as e:
+                                print(f"⚠️ Failed to fetch values for {attr['code']}: {e}", file=sys.stderr)
+
                     # Use AI to fill these attributes
                     ai_vals = fill_attributes_ai(product_name, product_description, mandatory_attrs, raw_attributes=raw_attributes)
+                    print(f"DEBUG: Generated AI values: {ai_vals}", file=sys.stderr)
                     return ai_vals
             except Exception as e:
                 print(f"⚠️ Universal attribute filling failed: {e}", file=sys.stderr)

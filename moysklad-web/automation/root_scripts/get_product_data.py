@@ -9,7 +9,7 @@ SUPABASE_KEY = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def get_product(nm_id):
-    res = supabase.table("wb_search_results").select("*").eq("id", nm_id).execute()
+    res = supabase.schema('Parser').table('wb_search_results').select("*").eq("id", nm_id).execute()
     if res.data:
         print(json.dumps(res.data[0], indent=2, ensure_ascii=False))
     else:

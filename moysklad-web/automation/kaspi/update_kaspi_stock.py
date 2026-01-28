@@ -26,7 +26,7 @@ def get_zero_stock_products():
     print("Fetching zero-stock products from Supabase...")
     try:
         # Fetching all for now, can paginate if needed
-        res = supabase.table("products").select("article, stock").eq("stock", 0).execute()
+        res = supabase.schema('Parser').table('products').select("article, stock").eq("stock", 0).execute()
         return res.data
     except Exception as e:
         print(f"Error fetching from Supabase: {e}")

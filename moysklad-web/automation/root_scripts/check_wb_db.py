@@ -16,7 +16,7 @@ print(f"🔍 Searching for article {article} in wb_products...")
 try:
     # Try 'wb_products' or 'wildberries_products' - checking table list first might be better but let's guess
     # Based on previous context, it might be 'wb_products'
-    response = supabase.table("wb_products").select("*").eq("nm_id", int(article)).execute()
+    response = supabase.schema('Parser').table('wb_products').select("*").eq("nm_id", int(article)).execute()
     
     if response.data:
         print(f"✅ Found in wb_products: {len(response.data)}")
@@ -28,7 +28,7 @@ except Exception as e:
     
     # Try searching by article string if nm_id is not the column or type mismatch
     try:
-        response = supabase.table("wb_products").select("*").eq("article", article).execute()
+        response = supabase.schema('Parser').table('wb_products').select("*").eq("article", article).execute()
         if response.data:
              print(f"✅ Found in wb_products (by article col): {len(response.data)}")
         else:

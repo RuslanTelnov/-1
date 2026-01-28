@@ -21,7 +21,7 @@ def export_data():
     
     print("Exporting 'products' table...")
     try:
-        resp = supabase.table("products").select("*").execute()
+        resp = supabase.schema('Parser').table('products').select("*").execute()
         with open(f"{output_dir}/products.json", "w", encoding="utf-8") as f:
             json.dump(resp.data, f, indent=2, ensure_ascii=False)
         print(f"Saved {len(resp.data)} records to products.json")
@@ -30,7 +30,7 @@ def export_data():
 
     print("Exporting 'wb_top_products' table...")
     try:
-        resp = supabase.table("wb_top_products").select("*").execute()
+        resp = supabase.schema('Parser').table('wb_top_products').select("*").execute()
         with open(f"{output_dir}/wb_top_products.json", "w", encoding="utf-8") as f:
             json.dump(resp.data, f, indent=2, ensure_ascii=False)
         print(f"Saved {len(resp.data)} records to wb_top_products.json")

@@ -9,7 +9,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-response = supabase.table("products").select("id, name, image_url").limit(20).execute()
+response = supabase.schema('Parser').table('products').select("id, name, image_url").limit(20).execute()
 
 print(f"Checking first {len(response.data)} products:")
 for product in response.data:

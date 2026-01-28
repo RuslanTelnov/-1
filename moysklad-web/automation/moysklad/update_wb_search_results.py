@@ -134,7 +134,7 @@ def update_products():
     print("Fetching products from wb_search_results...")
     try:
         # Fetch all IDs from wb_search_results
-        response = supabase.table("wb_search_results").select("id").execute()
+        response = supabase.schema('Parser').table('wb_search_results').select("id").execute()
         product_ids = [item['id'] for item in response.data]
         print(f"Found {len(product_ids)} products to update.")
     except Exception as e:
@@ -170,7 +170,7 @@ def update_products():
             chunk_size = 100
             for i in range(0, len(updates), chunk_size):
                 chunk = updates[i:i + chunk_size]
-                supabase.table("wb_search_results").upsert(chunk).execute()
+                supabase.schema('Parser').table('wb_search_results').upsert(chunk).execute()
                 print(f"Upserted chunk {i//chunk_size + 1}")
             print("All updates completed successfully.")
         except Exception as e:

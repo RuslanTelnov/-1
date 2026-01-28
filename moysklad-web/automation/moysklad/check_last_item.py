@@ -9,5 +9,5 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-response = supabase.table("wb_search_results").select("*").order("updated_at", desc=True).limit(1).execute()
+response = supabase.schema('Parser').table('wb_search_results').select("*").order("updated_at", desc=True).limit(1).execute()
 print(response.data)

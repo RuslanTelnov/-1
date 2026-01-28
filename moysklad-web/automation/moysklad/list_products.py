@@ -16,7 +16,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def list_products():
     try:
-        response = supabase.table("wb_top_products").select("id, name, url, price").execute()
+        response = supabase.schema('Parser').table('wb_top_products').select("id, name, url, price").execute()
         products = response.data
         print(f"Found {len(products)} products:")
         for p in products:

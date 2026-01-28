@@ -19,7 +19,7 @@ export default function NewProducts() {
                 'postgres_changes',
                 {
                     event: '*',
-                    schema: 'public',
+                    schema: 'Parser',
                     table: 'products'
                 },
                 (payload) => {

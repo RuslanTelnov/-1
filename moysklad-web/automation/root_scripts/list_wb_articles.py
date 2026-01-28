@@ -12,7 +12,7 @@ supabase: Client = create_client(url, key)
 print(f"🔍 Listing articles in wb_top_products...")
 
 try:
-    response = supabase.table("wb_top_products").select("id, name").limit(10).execute()
+    response = supabase.schema('Parser').table('wb_top_products').select("id, name").limit(10).execute()
     
     if response.data:
         for item in response.data:

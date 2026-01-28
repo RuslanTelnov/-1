@@ -67,7 +67,7 @@ def upload_image_to_ms(ms_id, image_url, name):
 def main():
     print("🚀 Fixing missing images and UPDATING PRICES (JPEG Mode)...")
     # Fetch products that have moysklad_id and price
-    response = supabase.table("products").select("moysklad_id, name, image_url, price").not_.is_("moysklad_id", "null").order("id", desc=True).execute()
+    response = supabase.schema('Parser').table('products').select("moysklad_id, name, image_url, price").not_.is_("moysklad_id", "null").order("id", desc=True).execute()
     products = response.data
     
     # Get price type meta once

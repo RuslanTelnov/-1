@@ -11,7 +11,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 def verify():
     print("Verifying cleanup...")
     # Check for products with stock 0
-    res = supabase.table("products").select("count", count="exact").eq("stock", 0).execute()
+    res = supabase.schema('Parser').table('products').select("count", count="exact").eq("stock", 0).execute()
     count = res.count
     
     if count == 0:

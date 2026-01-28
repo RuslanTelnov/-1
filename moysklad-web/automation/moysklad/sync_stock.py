@@ -87,7 +87,7 @@ def sync_stock():
             
             try:
                 # Upsert by moysklad_id
-                res = supabase.table("products").upsert(product_data, on_conflict="moysklad_id").execute()
+                res = supabase.schema('Parser').table('products').upsert(product_data, on_conflict="moysklad_id").execute()
                 
                 if len(res.data) > 0:
                     print(f"   ✅ Upserted {name}: stock={stock}")

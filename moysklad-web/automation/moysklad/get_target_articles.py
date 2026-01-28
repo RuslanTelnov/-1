@@ -11,7 +11,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Fetch top 5 products with non-empty articles
-response = supabase.table("products").select("id, name, article").neq("article", "").limit(5).execute()
+response = supabase.schema('Parser').table('products').select("id, name, article").neq("article", "").limit(5).execute()
 
 products_to_fetch = []
 for p in response.data:

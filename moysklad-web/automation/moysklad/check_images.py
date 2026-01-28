@@ -9,7 +9,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-response = supabase.table("wb_top_products").select("id, name, image_url, images").execute()
+response = supabase.schema('Parser').table('wb_top_products').select("id, name, image_url, images").execute()
 
 for product in response.data:
     has_main = bool(product.get('image_url'))

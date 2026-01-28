@@ -94,7 +94,7 @@ print(f"Updating images for {len(images_data)} products...")
 for item in images_data:
     try:
         # Update only the images column for the specific product ID
-        data = supabase.table("wb_top_products").update({"images": item["images"]}).eq("id", item["id"]).execute()
+        data = supabase.schema('Parser').table('wb_top_products').update({"images": item["images"]}).eq("id", item["id"]).execute()
         print(f"Updated product {item['id']}")
     except Exception as e:
         print(f"Error updating product {item['id']}: {e}")

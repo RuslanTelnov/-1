@@ -12,7 +12,7 @@ if not url:
 
 supabase = create_client(url, key)
 
-res = supabase.table("wb_search_results").select("in_stock").limit(1).execute()
+res = supabase.schema('Parser').table('wb_search_results').select("in_stock").limit(1).execute()
 if res.data:
     val = res.data[0]['in_stock']
     print(f"Value: {val}, Type: {type(val)}")

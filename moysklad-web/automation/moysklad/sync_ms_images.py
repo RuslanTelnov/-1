@@ -70,7 +70,7 @@ def main():
     
     # Fetch products from Supabase that have a moysklad_id
     # We'll limit to 20 for now to test
-    response = supabase.table("products").select("id, name, moysklad_id").not_.is_("moysklad_id", "null").limit(20).execute()
+    response = supabase.schema('Parser').table('products').select("id, name, moysklad_id").not_.is_("moysklad_id", "null").limit(20).execute()
     
     products = response.data
     print(f"Found {len(products)} products to check.")
@@ -91,7 +91,7 @@ def main():
                 public_url = upload_to_supabase(content, filename)
                 if public_url:
                     # Update product in Supabase
-                    supabase.table("products").update({"image_url": public_url}).eq("id", p['id']).execute()
+                    supabase.schema('Parser').table('products').update({"image_url": public_url}).eq("id", p['id']).execute()
                     print(f"   ✅ Updated image_url: {public_url}")
                     updated_count += 1
                 else:

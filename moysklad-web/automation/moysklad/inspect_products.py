@@ -9,7 +9,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-response = supabase.table("products").select("id, name, article").limit(20).execute()
+response = supabase.schema('Parser').table('products').select("id, name, article").limit(20).execute()
 
 print("MS Products Sample:")
 for p in response.data:

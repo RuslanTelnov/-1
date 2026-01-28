@@ -38,7 +38,7 @@ def get_basket_number(wb_id):
 
 def fetch_full_details():
     print("📦 Fetching product IDs from database...")
-    response = supabase.table("wb_top_products").select("id").execute()
+    response = supabase.schema('Parser').table('wb_top_products').select("id").execute()
     product_ids = [item['id'] for item in response.data]
     print(f"   Found {len(product_ids)} products.")
 
@@ -99,7 +99,7 @@ def fetch_full_details():
                 # "name": data.get("imt_name", "") # Sometimes imt_name is empty
             }
             
-            supabase.table("wb_top_products").update(update_data).eq("id", wb_id).execute()
+            supabase.schema('Parser').table('wb_top_products').update(update_data).eq("id", wb_id).execute()
             print(f"   ✅ Updated {wb_id}: {len(specs)} specs")
             
             time.sleep(0.2)
