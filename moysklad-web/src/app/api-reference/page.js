@@ -290,7 +290,7 @@ export default function ApiReference() {
 
                                     <div style={{ display: 'grid', gap: '2rem' }}>
                                         {group.endpoints.map((ep, eIdx) => (
-                                            <EndpointDetail key={ep.path} endpoint={ep} />
+                                            <EndpointDetail key={`${ep.method}-${ep.path}-${eIdx}`} endpoint={ep} />
                                         ))}
                                     </div>
                                 </motion.div>
