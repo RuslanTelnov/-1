@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from modules.creator import prepare_card_payload, create_card
 from modules.wb_enricher import WBEnricher
 from modules.url_helper import extract_wb_article
+from modules.image_uploader import ImageUploader
 import config
 
 def init_supabase() -> Client:
@@ -175,22 +176,48 @@ def create_from_wb(article_input):
             return False
         
         # Prepare payload
-        # Priority 1: Use 'code' from MoySklad (standard integration style)
-        # Priority 2: Use article-K (previous custom style) - using article_id as fallback
+        # Priority 1: Use 'code' from MoySklad (Strictly required)
         sku = None
         
         # Check 'products' table for the code (synced from MS)
         try:
-             res_ms = supabase.table("products").select("code").eq("article", str(article_id)).execute()
+             res_ms = supabase.table("products").select("code", "id").eq("article", str(article_id)).execute()
              if res_ms.data and res_ms.data[0].get("code"):
                   sku = res_ms.data[0]["code"]
-                  print(f"🔗 Found MoySklad Code to use as SKU: {sku}")
+                  print(f"🔗 Found MoySklad Code in DB: {sku}")
+                  # Also update local ms_id if missing
+                  if not wb_product.get("moysklad_id") and res_ms.data[0].get("id"):
+                      wb_product["moysklad_id"] = res_ms.data[0]["id"]
         except:
              pass
              
+        # If not in DB, try fetching from MS API
         if not sku:
-             sku = f"{article_id}"
-             print(f"⚠️  MoySklad Code not found for {article_id}. Using raw ID as SKU: {sku}")
+            print(f"⚠️  Code not found in DB for {article_id}. Searching in MoySklad API...")
+            try:
+                # Load MS Credentials
+                load_dotenv('moysklad-web/.env.local')
+                login = os.getenv('MOYSKLAD_LOGIN')
+                password = os.getenv('MOYSKLAD_PASSWORD')
+                
+                if login and password:
+                    ms_url = f"https://api.moysklad.ru/api/remap/1.2/entity/product?filter=article={article_id}"
+                    resp = requests.get(ms_url, auth=(login, password))
+                    if resp.status_code == 200:
+                        ms_data = resp.json()
+                        rows = ms_data.get('rows', [])
+                        if rows:
+                            product_row = rows[0]
+                            sku = product_row.get('code')
+                            wb_product["moysklad_id"] = product_row.get('id')
+                            print(f"🔗 Found MoySklad Code via API: {sku}")
+            except Exception as e:
+                print(f"⚠️  Error fetching from MS API: {e}")
+
+        if not sku:
+             print(f"❌ STRICT MODE: MoySklad Code (SKU) not found for Article {article_id}.")
+             print("   Please create the product in MoySklad first or ensure synchronization.")
+             return False
         
         # Ensure we have images (Kaspi requires at least one, and at least 500x500)
         # 1. Try from Specs (Best Quality from WB)
@@ -229,11 +256,26 @@ def create_from_wb(article_input):
             except Exception as e:
                 print(f"⚠️ Failed to fetch MS image: {e}")
 
+        # Proxy images through Supabase (Kaspi cannot download from WB directly)
+        proxied_images = []
+        if images:
+            print(f"🖼️  Proxying {len(images)} images through Supabase...")
+            try:
+                uploader = ImageUploader()
+                for idx, img_url in enumerate(images[:8]): # Kaspi limit: 8 images
+                    pub_url = uploader.upload_image_from_url(img_url, sku, idx+1)
+                    if pub_url:
+                        proxied_images.append(pub_url)
+            except Exception as e:
+                print(f"⚠️  Image proxy failed: {e}")
+                # Fallback to original (though likely to fail)
+                proxied_images = images[:8]
+
         # Use custom prefix "201" to generate a unique internal barcode
         # and avoid binding to existing cards (Global Catalog)
         payload = prepare_card_payload(kaspi_data, sku, custom_barcode_prefix="201")
-        if images:
-            payload["images"] = [{"url": img} for img in images]
+        if proxied_images:
+            payload["images"] = [{"url": img} for img in proxied_images]
         
         print(f"📝 Prepared payload for SKU: {sku} with {len(images)} images")
         # print(json.dumps(payload, indent=2, ensure_ascii=False))

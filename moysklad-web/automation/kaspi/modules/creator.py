@@ -67,62 +67,46 @@ def prepare_card_payload(scraped_data, sku, custom_barcode_prefix="200"):
         "brand": scraped_data.get("brand", "Generic")[:250], # Max 256
         "category": scraped_data.get("category_name"), # This should be "Master - ..."
         "attributes": attributes_list,
-        "images": [{"url": img} if isinstance(img, str) else img for img in scraped_data.get("images", [])],
-        "barcode": barcode,
-        "model": scraped_data.get("title", "")[:50] # Use truncated title as model if not provided
+        "images": [{"url": img} if isinstance(img, str) else img for img in scraped_data.get("images", [])]
     }
     return payload
 
 def create_card(payload):
     """
-    Sends the product data to Kaspi Content Import API.
+    Sends the product data to Kaspi Content Import API using KaspiApiClient.
     """
-    import json
     token = config.KASPI_API_TOKEN
     if not token:
         print("WARNING: No API token found. Skipping API call.")
-        return False
-        
-    headers = {
-        "Content-Type": "text/plain", # Kaspi quirk: requires text/plain for JSON body
-        "Accept": "application/json",
-        "X-Auth-Token": token,
-        "User-Agent": config.USER_AGENT
-    }
-    
-    # Endpoint for content import
-    url = f"{config.KASPI_CONTENT_API_URL}/products/import" 
+        return False, None
     
     try:
-        print(f"Sending data to {url}...")
+        # Import internally to avoid circular dependencies or path issues if run directly
+        try:
+            from modules.kaspi_api_client import KaspiApiClient
+        except ImportError:
+            # Fallback for direct execution
+            from kaspi_api_client import KaspiApiClient
+
+        client = KaspiApiClient(token)
+        
+        print(f"Sending data to Kaspi API...")
         # Wrap payload in a list as per schema
         final_payload = [payload]
         
-        # We must send data as string because we use text/plain
-        json_data = json.dumps(final_payload, ensure_ascii=False)
+        response = client.import_products(final_payload)
         
-        response = requests.post(url, data=json_data.encode('utf-8'), headers=headers)
-        
-        if response.status_code in [200, 201, 202, 204]:
-            print("✅ API Call Success!")
-            upload_id = None
-            if response.text:
-                print(f"Response: {response.text}")
-                try:
-                    resp_json = response.json()
-                    upload_id = resp_json.get("code")
-                except:
-                    pass
-            else:
-                print("Response: <Empty> (Success)")
-            return True, upload_id
+        print("✅ API Call Success!")
+        upload_id = response.get("code")
+        if upload_id:
+             print(f"Upload ID: {upload_id}")
         else:
-            print(f"❌ API Call Failed: {response.status_code}")
-            print(f"Response: {response.text}")
-            return False, None
-            
+             print(f"Response (no code?): {response}")
+             
+        return True, upload_id
+
     except Exception as e:
-        print(f"Error creating card: {e}")
+        print(f"❌ Error creating card: {e}")
         return False, None
 
 if __name__ == "__main__":

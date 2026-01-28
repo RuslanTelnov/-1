@@ -39,20 +39,22 @@ class KaspiCategoryMapper:
         'мишка': ('Master - Stuffed toys', 'toys'),
         
         # Model Cars (Correct category for Hot Wheels etc)
-        'hot wheels': ('Master - Model cars and other vehicles', 'model_cars'),
-        'машинка металлическая': ('Master - Model cars and other vehicles', 'model_cars'),
-        'коллекционная модель': ('Master - Model cars and other vehicles', 'model_cars'),
-        'масштабная модель': ('Master - Model cars and other vehicles', 'model_cars'),
-        'модель 1:': ('Master - Model cars and other vehicles', 'model_cars'),
+        'hot wheels': ('Master - Play vehicles', 'model_cars'),
+        'машинка металлическая': ('Master - Play vehicles', 'model_cars'),
+        'коллекционная модель': ('Master - Play vehicles', 'model_cars'),
+        'масштабная модель': ('Master - Play vehicles', 'model_cars'),
+        'масштабная модель': ('Master - Play vehicles', 'model_cars'),
+        'модель 1:': ('Master - Play vehicles', 'model_cars'),
+        'трактор': ('Master - Play vehicles', 'model_cars'),
+        'машинк': ('Master - Play vehicles', 'model_cars'),
+        'машина': ('Master - Play vehicles', 'model_cars'),
         
         # General Toys (Fallback)
         'игруш': ('Master - Stuffed toys', 'toys'),
         'кукл': ('Master - Stuffed toys', 'toys'),
         'пупс': ('Master - Stuffed toys', 'toys'),
         'светофор': ('Master - Stuffed toys', 'toys'),
-        'трактор': ('Master - Stuffed toys', 'toys'),
-        'машинк': ('Master - Stuffed toys', 'toys'),
-        'машина': ('Master - Stuffed toys', 'toys'),
+        'светофор': ('Master - Stuffed toys', 'toys'),
         'волчок': ('Master - Stuffed toys', 'toys'),
         
         # Educational / hobby
@@ -285,9 +287,9 @@ class KaspiCategoryMapper:
                 'Mascaras*Features', 'Decorative cosmetics*Country'
             ],
             'model_cars': [
-                'Model cars and other vehicles*Type',
-                'Model cars and other vehicles*Scale',
-                'Model cars and other vehicles*Model',
+                'Play vehicles*Type',
+                'Play vehicles*Vendor code',
+                'Play vehicles*Model',
                 'Toys*Age',
                 'Toys*Gender',
                 'Toys*Color',
@@ -575,29 +577,38 @@ class KaspiCategoryMapper:
 
     @staticmethod
     def generate_attributes_for_model_cars(product_name: str, product_description: str = "") -> Dict[str, str]:
-        """Generate Kaspi attributes for Model Cars."""
+        """Generate Kaspi attributes for Play Vehicles (Model Cars)."""
         text = (product_name + " " + product_description).lower()
         
+        # Determine strict type
+        vehicle_type = "машина"
+        if "hot wheels" in text or "гоночная" in text:
+            vehicle_type = "гоночная машина"
+        elif "грузовик" in text:
+            vehicle_type = "грузовая"
+        elif "трактор" in text:
+            vehicle_type = "трактор"
+            
         attributes = {
-            "Model cars and other vehicles*Type": "легковой автомобиль",
-            "Model cars and other vehicles*Scale": "1:64",
-            "Model cars and other vehicles*Model": product_name[:50],
-            "Toys*Age": "От 3 лет",
-            "Toys*Gender": "Для мальчиков",
-            "Toys*Color": "Разноцветный",
-            "Toys*Material": "Металл"
+            "Play vehicles*Type": vehicle_type,
+            "Play vehicles*Vendor code": "HW-" + "".join(filter(str.isalnum, product_name[:10])).upper(),
+            "Play vehicles*Model": product_name[:50],
+            "Toys*Age": ["3 года"],
+            "Toys*Gender": "мальчик",
+            "Toys*Color": ["мультиколор"],
+            "Toys*Material": ["металл"]
         }
         
-        # Detect Scale
+        # Detect Scale (Optional)
         scale_match = re.search(r'1:(\d+)', text)
         if scale_match:
-            attributes["Model cars and other vehicles*Scale"] = f"1:{scale_match.group(1)}"
+            attributes["Play vehicles*Scale"] = f"1:{scale_match.group(1)}"
             
         # Detect Color
-        if "черн" in text: attributes["Toys*Color"] = "Черный"
-        elif "красн" in text: attributes["Toys*Color"] = "Красный"
-        elif "син" in text: attributes["Toys*Color"] = "Синий"
-        elif "бел" in text: attributes["Toys*Color"] = "Белый"
+        if "черн" in text: attributes["Toys*Color"] = ["черный"]
+        elif "красн" in text: attributes["Toys*Color"] = ["красный"]
+        elif "син" in text: attributes["Toys*Color"] = ["синий"]
+        elif "бел" in text: attributes["Toys*Color"] = ["белый"]
         
         return attributes
 
